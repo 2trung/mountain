@@ -4,7 +4,11 @@
       "Bash(node *)",
       "Bash(npx vite *)",
       "Bash(npm ls *)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "PowerShell(node -e \"const fs=require\\('fs'\\);for\\(const f of ['mountains.glb','Homepage.glb']\\){const b=fs.readFileSync\\('E:/Code/ThreeJS/mountain/public/'+f\\);const L=b.readUInt32LE\\(12\\);const g=JSON.parse\\(b.slice\\(20,20+L\\).toString\\('utf8'\\)\\);console.log\\(f,'materials:',JSON.stringify\\(g.materials.map\\(m=>m.name\\)\\)\\);}\")",
+      "PowerShell(node -e \"const fs=require\\('fs'\\);const b=fs.readFileSync\\('E:/Code/ThreeJS/mountain/public/mountains.glb'\\);const L=b.readUInt32LE\\(12\\);const g=JSON.parse\\(b.slice\\(20,20+L\\).toString\\('utf8'\\)\\);console.log\\('extUsed:',JSON.stringify\\(g.extensionsUsed\\)\\);[14,15].forEach\\(i=>console.log\\('node',i,g.nodes[i].name,'ext:',JSON.stringify\\(g.nodes[i].extensions\\)\\)\\);\")",
+      "PowerShell(node -e \"const fs=require\\('fs'\\);const b=fs.readFileSync\\('E:/Code/ThreeJS/mountain/public/mountains.glb'\\);const L=b.readUInt32LE\\(12\\);const g=JSON.parse\\(b.slice\\(20,20+L\\).toString\\('utf8'\\)\\);const m=g.materials.find\\(x=>x.name==='Cloud'\\);console.log\\('Cloud material:',JSON.stringify\\(m,null,2\\)\\);const fg=g.meshes[g.nodes.find\\(n=>n.name==='Foreground'\\).mesh];console.log\\('Foreground mesh prims attrs:',JSON.stringify\\(fg.primitives.map\\(p=>\\({attr:Object.keys\\(p.attributes\\),mode:p.mode}\\)\\)\\)\\);\")",
+      "PowerShell(node -e \"const t=require\\('three/tsl'\\);const names=['Fn','uv','vec2','vec3','vec4','float','mix','smoothstep','time','positionWorld','positionLocal','mx_fractal_noise_float','mx_noise_float','length','instanceIndex','step','clamp','texture','normalWorld','cameraPosition','oneMinus','pow'];for\\(const n of names\\)console.log\\(n, typeof t[n]\\);\" 2>&1 | findstr /V undefined; echo '--- undefineds ---'; node -e \"const t=require\\('three/tsl'\\);const names=['Fn','uv','vec3','time','positionWorld','mx_fractal_noise_float','mx_noise_float','smoothstep'];for\\(const n of names\\)if\\(typeof t[n]==='undefined'\\)console.log\\('MISSING:',n\\);\")"
     ]
   }
 }
