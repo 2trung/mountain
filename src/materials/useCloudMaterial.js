@@ -23,8 +23,8 @@ import {
   positionLocal,
 } from 'three/tsl'
 
-// TSL port of the reference GLSL cloud shader (see Cloud_glsl.md).
-// Each instanced quad gets a seed (sum of its instanceMatrix translation) and
+// TSL port of the reference GLSL cloud shader (fragment: Cloud_glsl.md,
+// vertex: cloud_vertext.md). Each instanced quad gets a seed (sum of its instanceMatrix translation) and
 // an aspect ratio (Y scale / X scale) so every cloud samples the noise
 // textures differently. uv.y is distorted by three scrolling noise layers,
 // then shaped into a band of cloud with smoothsteps and faded at the quad
@@ -180,11 +180,7 @@ export function useCloudMaterial(instancedMesh) {
       depthTest: false,
       side: DoubleSide,
     })
-    // The reference vertex shader nudges the quads up with the chapter.
     material.positionNode = positionLocal.add(vec3(0, uChapter.mul(0.01), 0))
-    // fragmentNode (not colorNode/opacityNode) to match the reference
-    // ShaderMaterial, which wrote gl_FragColor raw — no tone mapping or
-    // output color-space conversion on these authored sRGB-ish values.
     material.fragmentNode = fragment()
 
     material.userData.uChapter = uChapter

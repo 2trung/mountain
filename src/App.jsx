@@ -9,7 +9,7 @@ function App() {
   return (
     <Canvas
       shadows
-      camera={{ position: [0, 0, 200], fov: 55 }}
+      camera={{ fov: 55 }}
       gl={(props) => {
         extend(THREE)
         const renderer = new WebGPURenderer({
@@ -23,7 +23,7 @@ function App() {
         return renderer.init().then(() => renderer)
       }}
     >
-      <color attach='background' args={['#ececec']} />
+      <color attach='background' args={['#949FA8']} />
       <Suspense fallback={null}>
         <Experience />
       </Suspense>
