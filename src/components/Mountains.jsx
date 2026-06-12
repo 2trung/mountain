@@ -77,12 +77,12 @@ export function Model(props) {
           <primitive
             object={nodes.Foreground}
             material={foregroundMaterial}
-            renderOrder={10}
+            renderOrder={4}
           />
           <primitive
             object={nodes.Middleground}
             material={middlegroundMaterial}
-            renderOrder={10}
+            renderOrder={2}
           />
         </group>
         {/* <group name='TransitionLines'>
