@@ -2,16 +2,31 @@ import { useEffect } from 'react'
 import { useGLTF } from '@react-three/drei'
 import { useControls } from 'leva'
 import { useCloudMaterial } from '../materials/useCloudMaterial'
+import { useMountainMaterial } from '../materials/useMountainMaterial'
 
 export function Model(props) {
-  const { nodes, materials } = useGLTF('/mountains.glb')
+  const { nodes } = useGLTF('/mountains.glb')
   const foregroundMaterial = useCloudMaterial(nodes.Foreground)
   const middlegroundMaterial = useCloudMaterial(nodes.Middleground)
+  const mountainMaterial = useMountainMaterial()
 
-  const { uChapter, uTransition, uSize } = useControls('Clouds', {
-    uChapter: { value: 0, min: 0, max: 3, step: 0.01 },
-    uTransition: { value: 0, min: 0, max: 1, step: 0.01 },
+  // Scroll-driven uniforms shared by the mountain and cloud materials
+  const { uPage, uChapter, uTransition, uTransitionDirection } = useControls(
+    'Scroll',
+    {
+      uPage: { value: 0, min: 0, max: 4, step: 0.01 },
+      uChapter: { value: 0, min: 0, max: 3, step: 0.01 },
+      uTransition: { value: 0, min: 0, max: 1, step: 0.01 },
+      uTransitionDirection: { value: 1, min: 0, max: 1, step: 0.01 },
+    },
+  )
+  const { uSize } = useControls('Clouds', {
     uSize: { value: { x: 1, y: 1 }, min: 0.1, max: 5, step: 0.01 },
+  })
+  const { uFogNear, uFogFar, uLightColor } = useControls('Mountain', {
+    uFogNear: { value: 1, min: 0, max: 100, step: 0.1 },
+    uFogFar: { value: 1000, min: 100, max: 3000, step: 1 },
+    uLightColor: '#949fa8',
   })
 
   useEffect(() => {
@@ -20,7 +35,27 @@ export function Model(props) {
       mat.userData.uTransition.value = uTransition
       mat.userData.uSize.value.set(uSize.x, uSize.y)
     }
-  }, [foregroundMaterial, middlegroundMaterial, uChapter, uTransition, uSize])
+    const u = mountainMaterial.userData
+    u.uPage.value = uPage
+    u.uChapter.value = uChapter
+    u.uTransition.value = uTransition
+    u.uTransitionDirection.value = uTransitionDirection
+    u.uFogNear.value = uFogNear
+    u.uFogFar.value = uFogFar
+    u.uLightColor.value.set(uLightColor)
+  }, [
+    foregroundMaterial,
+    middlegroundMaterial,
+    mountainMaterial,
+    uPage,
+    uChapter,
+    uTransition,
+    uTransitionDirection,
+    uSize,
+    uFogNear,
+    uFogFar,
+    uLightColor,
+  ])
   return (
     <group {...props} dispose={null}>
       <group name='MONTFORT'>
@@ -64,7 +99,7 @@ export function Model(props) {
           castShadow
           receiveShadow
           geometry={nodes.Mountain.geometry}
-          material={materials.Mountain}
+          material={mountainMaterial}
           position={[0, -3.242, 0]}
         />
         <group name='CapitalSun' position={[-76, 1.398, 171.841]} />

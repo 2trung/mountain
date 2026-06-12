@@ -1,19 +1,29 @@
-import { useMemo } from 'react'
+import { useEffect } from 'react'
 import { useGLTF } from '@react-three/drei'
-import { MeshStandardNodeMaterial } from 'three/webgpu'
-import { positionLocal, smoothstep } from 'three/tsl'
+import { useControls } from 'leva'
+import { usePeakMaterial } from '../materials/usePeakMaterial'
 
 export function Model(props) {
   const { nodes, materials } = useGLTF('/Homepage.glb')
+  const peaksMaterial = usePeakMaterial(materials.HomepagePeaks)
 
-  const peaksMaterial = useMemo(() => {
-    const source = materials.HomepagePeaks
-    const material = new MeshStandardNodeMaterial()
-    for (const key in source) material[key] = source[key]
-    material.transparent = true
-    material.opacityNode = smoothstep(-0.8, 1.0, positionLocal.y)
-    return material
-  }, [materials])
+  // Same leva keys as Mountains.jsx — leva shares the state between them
+  const { uTransition } = useControls('Scroll', {
+    uTransition: { value: 0, min: 0, max: 1, step: 0.01 },
+  })
+  const { uFogNear, uFogFar, uLightColor } = useControls('Mountain', {
+    uFogNear: { value: 1, min: 0, max: 100, step: 0.1 },
+    uFogFar: { value: 1000, min: 100, max: 3000, step: 1 },
+    uLightColor: '#949fa8',
+  })
+
+  useEffect(() => {
+    const u = peaksMaterial.userData
+    u.uTransition.value = uTransition
+    u.uFogNear.value = uFogNear
+    u.uFogFar.value = uFogFar
+    u.uLightColor.value.set(uLightColor)
+  }, [peaksMaterial, uTransition, uFogNear, uFogFar, uLightColor])
 
   return (
     <group {...props} dispose={null}>
