@@ -60,10 +60,11 @@ export function useCloudMaterial(instancedMesh) {
         instanceIndex,
       )
       const translation = matrix.mul(vec4(0, 0, 0, 1)).xyz
-      const scaleX = matrix.mul(vec4(1, 0, 0, 0)).xyz.length()
-      const scaleY = matrix.mul(vec4(0, 1, 0, 0)).xyz.length()
+      const m00 = matrix.mul(vec4(1, 0, 0, 0)).x // instanceMatrix[0][0]
+      const m11 = matrix.mul(vec4(0, 1, 0, 0)).y // instanceMatrix[1][1]
+
       vSeed = varying(translation.x.add(translation.y).add(translation.z))
-      vRatio = varying(scaleY.div(scaleX))
+      vRatio = varying(m11.div(m00))
     }
 
     const fragment = Fn(() => {
