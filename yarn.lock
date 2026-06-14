@@ -280,6 +280,11 @@
   resolved "https://registry.npmjs.org/@rolldown/pluginutils/-/pluginutils-1.0.1.tgz"
   integrity sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==
 
+"@shaderfrog/glsl-parser@^2.0.1":
+  version "2.1.5"
+  resolved "https://registry.npmjs.org/@shaderfrog/glsl-parser/-/glsl-parser-2.1.5.tgz"
+  integrity sha512-fw7U8Y7BBV9NZVLs7lyM8lpQ9YUK7XBNJjN4HhkY3nqkKpSiIQ62PVtPYtW7uZME5072QXQNQBhHJzG3t+NH0w==
+
 "@stitches/react@^1.2.8":
   version "1.2.8"
   resolved "https://registry.npmjs.org/@stitches/react/-/react-1.2.8.tgz"
@@ -819,6 +824,13 @@ source-map-js@^1.2.1:
   version "1.2.1"
   resolved "https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.1.tgz"
   integrity sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==
+
+spectorjs@^0.9.30:
+  version "0.9.30"
+  resolved "https://registry.npmjs.org/spectorjs/-/spectorjs-0.9.30.tgz"
+  integrity sha512-I9/VI3gfO3UiBCUXj20lQjP3fbezP2y03Virnv3jcMpIiF+/NOyWDrBQ+U8vf29IXHPscxOXzzmZDCkETznsMg==
+  dependencies:
+    "@shaderfrog/glsl-parser" "^2.0.1"
 
 split-string@^3.0.1:
   version "3.1.0"
