@@ -250,9 +250,12 @@ export function createMountainMaterial({
     secondSample.mul(vec4(0.8, 0.7, 0.8, 1)),
     mixMaritime,
   )
+  // Darken the lower island toward the waterline so the wide base apron reads
+  // as wet rock/shore instead of bright snow (range widened from the original
+  // -22..-15 to span the visible base above the raised sea).
   maritimeSample = vec4(
     maritimeSample.rgb.mul(
-      smoothstep(-22, -15, posL.y.add(smallNoise.x.mul(5)))
+      smoothstep(0, 38, posL.y.add(smallNoise.x.mul(5)))
         .mul(0.9)
         .add(0.1),
     ),

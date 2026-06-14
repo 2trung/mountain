@@ -1,29 +1,34 @@
 import { useEffect } from 'react'
 import { useGLTF } from '@react-three/drei'
-import { useControls } from 'leva'
+import { useFrame } from '@react-three/fiber'
 import { usePeakMaterial } from '../materials/usePeakMaterial'
+import { useTransitionState } from '../state/TransitionContext'
+import { smoothstep } from '../utils/math'
 
-export function Model(props) {
+// The floating backdrop peaks that frame the homepage. They only belong to the
+// home chapter, so they fade out (via the same uTransition the peak shader uses)
+// both during a switch and whenever the active page leaves home.
+export function Peaks(props) {
   const { nodes, materials } = useGLTF('/Homepage.glb')
   const peaksMaterial = usePeakMaterial(materials.HomepagePeaks)
-
-  // Same leva keys as Mountains.jsx — leva shares the state between them
-  const { uTransition } = useControls('Scroll', {
-    uTransition: { value: 0, min: 0, max: 1, step: 0.01 },
-  })
-  const { uFogNear, uFogFar, uLightColor } = useControls('Mountain', {
-    uFogNear: { value: 1, min: 0, max: 100, step: 0.1 },
-    uFogFar: { value: 1000, min: 100, max: 3000, step: 1 },
-    uLightColor: '#949fa8',
-  })
+  const progress = useTransitionState()
 
   useEffect(() => {
     const u = peaksMaterial.userData
-    u.uTransition.value = uTransition
-    u.uFogNear.value = uFogNear
-    u.uFogFar.value = uFogFar
-    u.uLightColor.value.set(uLightColor)
-  }, [peaksMaterial, uTransition, uFogNear, uFogFar, uLightColor])
+    u.uFogNear.value = 1
+    u.uFogFar.value = 2000
+    u.uLightColor.value.set('#949fa8')
+  }, [peaksMaterial])
+
+  useFrame(() => {
+    // 0 on home, 1 once we move off it; combined with the live wave value so the
+    // peaks dissolve with the transition and stay gone for the other chapters.
+    const awayFromHome = smoothstep(0, 0.5, progress.page)
+    peaksMaterial.userData.uTransition.value = Math.max(
+      progress.transition,
+      awayFromHome,
+    )
+  })
 
   return (
     <group {...props} dispose={null}>
