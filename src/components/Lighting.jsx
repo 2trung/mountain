@@ -13,12 +13,16 @@ export function Lighting() {
 
   useFrame(() => {
     const m = progress.mood
-    if (amb.current) amb.current.intensity = m.amb
+    if (amb.current) {
+      amb.current.intensity = m.amb
+      amb.current.color.copy(m.ambColor)
+    }
     if (dir.current) {
       dir.current.intensity = m.dir
       dir.current.color.copy(m.dirCol)
     }
     scene.environmentIntensity = m.env
+    scene.environmentRotation.set(0, m.envRot, 0)
   })
 
   return (
