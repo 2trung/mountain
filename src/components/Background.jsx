@@ -23,7 +23,6 @@ export function Background(props) {
     u.uTransition.value = progress.transition
     u.uDarkColor.value.copy(progress.mood.bgDark)
     u.uLightColor.value.copy(progress.mood.bgLight)
-    u.uCloudiness.value = progress.mood.cloud
   })
 
   return (

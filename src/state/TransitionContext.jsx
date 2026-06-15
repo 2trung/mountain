@@ -29,10 +29,14 @@ export function TransitionProvider({ children }) {
         bgLight: new Color(m.bgLight),
         fog: new Color(m.fog),
         dirCol: new Color(m.dirCol),
+        ambColor: new Color(m.ambColor),
+        mtnColor: new Color(m.mtnColor),
         cloud: m.cloud,
         amb: m.amb,
         dir: m.dir,
         env: m.env,
+        envRot: m.envRot,
+        roughness: m.roughness,
       },
     }
   }, [])
@@ -76,10 +80,14 @@ function TransitionDriver({ progress }) {
     md.bgLight.lerp(tmpCol.set(m.bgLight), k)
     md.fog.lerp(tmpCol.set(m.fog), k)
     md.dirCol.lerp(tmpCol.set(m.dirCol), k)
+    md.ambColor.lerp(tmpCol.set(m.ambColor), k)
+    md.mtnColor.lerp(tmpCol.set(m.mtnColor), k)
     md.cloud = lerp(md.cloud, m.cloud, k)
     md.amb = lerp(md.amb, m.amb, k)
     md.dir = lerp(md.dir, m.dir, k)
     md.env = lerp(md.env, m.env, k)
+    md.envRot = lerp(md.envRot, m.envRot, k)
+    md.roughness = lerp(md.roughness, m.roughness, k)
 
     if (anim.phase === 'idle' && target.page !== progress.page) {
       const fromIndex = CHAPTERS.findIndex((c) => c.page === progress.page)

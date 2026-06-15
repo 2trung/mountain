@@ -1,6 +1,11 @@
 import { useMemo } from 'react'
 import { useTexture } from '@react-three/drei'
-import { MeshStandardNodeMaterial, RepeatWrapping, Color } from 'three/webgpu'
+import {
+  MeshStandardNodeMaterial,
+  RepeatWrapping,
+  Color,
+  Vector2,
+} from 'three/webgpu'
 import {
   uv,
   vec2,
@@ -24,6 +29,9 @@ import {
   positionWorld,
   positionView,
   normalView,
+  depth,
+  perspectiveDepthToViewZ,
+  viewZToOrthographicDepth,
 } from 'three/tsl'
 import {
   hueShift,
@@ -155,11 +163,30 @@ export function createMountainMaterial({
   const uColor = uniform(new Color(1, 1, 1))
   const uRoughness = uniform(0.9)
   const uMetalness = uniform(0)
-  const uFogNear = uniform(1)
-  const uFogFar = uniform(1000)
+  // Camera near/far — used to linearize gl_FragCoord.z for the distance fog.
+  // (These are NOT the reference's per-chapter fog values; computeDepth needs
+  // the actual projection's near/far to recover true linear depth.)
+  const uFogNear = uniform(0.1)
+  const uFogFar = uniform(5000)
   const uLightColor = uniform(new Color('#949fa8')) // distance-fog / sky
   const uDarkColor = uniform(new Color('#1e2630')) // capital high-altitude tint
   const uCapitalFog = uniform(new Color('#aebdab')) // capital valley fog
+
+  /* Per-chapter texture UV transforms (reference mapTransform* fields). map ->
+     primary diffuse, map2 -> second diffuse / grass, mix -> snow-rock mask. */
+  const uMapRepeat = uniform(new Vector2(1, 1))
+  const uMapOffset = uniform(new Vector2(0, 0))
+  const uMapRot = uniform(0)
+  const uMap2Repeat = uniform(new Vector2(1, 1))
+  const uMap2Offset = uniform(new Vector2(0, 0))
+  const uMap2Rot = uniform(0)
+  const uMixRepeat = uniform(new Vector2(1, 1))
+  const uMixOffset = uniform(new Vector2(0, 0))
+  const uMixRot = uniform(0)
+
+  // uv * transform: rotate about the texture centre, scale by repeat, shift.
+  const txUv = (base, repeat, offset, rot) =>
+    rotateUv(base, vec2(0.5, 0.5), rot).mul(repeat).add(offset)
 
   const st = uv()
   const posL = positionLocal // vPosition
@@ -226,28 +253,35 @@ export function createMountainMaterial({
   const smallNoise = texture(noiseTex, st.mul(45)).rg.sub(0.5)
   const bigNoise = texture(noiseTex, st.mul(5)).rg.sub(0.5)
 
+  /* Per-chapter transformed UVs for the diffuse / second / mix samplers. */
+  const mapUv = txUv(st, uMapRepeat, uMapOffset, uMapRot)
+  const map2Uv = txUv(st, uMap2Repeat, uMap2Offset, uMap2Rot)
+  const mixUv = txUv(
+    vec2(st.x, st.y.oneMinus()),
+    uMixRepeat,
+    uMixOffset,
+    uMixRot,
+  )
+
   /* Base color layers */
   const baseSample = mix(
     vec4(0.98, 0.98, 1, 1),
-    texture(diffuseTex, st),
+    texture(diffuseTex, mapUv),
     pageHigh,
   )
-  const second0 = texture(diffuseTex, st)
+  const second0 = texture(diffuseTex, map2Uv)
   const secondSample = vec4(
     mix(second0.rgb, mix(vec3(0.36, 0.47, 0.52), vec3(1), second0.r), homepage),
     second0.a,
   )
-  const mixMapSample = texture(
-    mixTex,
-    vec2(st.x, st.y.oneMinus()).add(smallNoise.mul(0.002)),
-  )
+  const mixMapSample = texture(mixTex, mixUv.add(smallNoise.mul(0.002)))
 
   /* HOMEPAGE & TRADING */
   const hoTraSample = mix(secondSample.mul(1.3), baseSample, mixMapSample.r)
 
   /* CAPITAL — grass, moss, flowers, valley shading.
      Capital swaps the "second" diffuse (tMap2) for the grass diffuse. */
-  const grassSample = texture(grassTex, st)
+  const grassSample = texture(grassTex, map2Uv)
   let capitalSample = mix(grassSample.mul(0.6), baseSample, mixMapSample.r)
   let capRgb = hueShift(
     capitalSample.rgb,
@@ -369,12 +403,15 @@ export function createMountainMaterial({
     vec3(0.35, 0.34, 0.5),
     smoothstep(40, 20, posL.y),
   )
-  const tradingLightmap = armSample.rgb.mul(
-    mix(
-      vec3(0.05, 0.18, 0.25).mul(0.5),
-      tradingLight,
-      smoothstep(0.2, 1.1, armSample.r),
+  const tradingLightmap = adjustSaturation(
+    armSample.rgb.mul(
+      mix(
+        vec3(0.1, 0.18, 0.25).mul(0.5),
+        tradingLight,
+        smoothstep(0.2, 1.1, armSample.r),
+      ),
     ),
+    0.7,
   )
   let armRgb = mix(armSample.rgb, homepageLightmap, homepage)
   armRgb = mix(armRgb, capitalLightmap, capital)
@@ -531,14 +568,15 @@ export function createMountainMaterial({
   outgoing = adjustSaturation(outgoing, transitionWave.oneMinus())
   outgoing = outgoing.add(totalEmissive)
 
-  // Distance fog toward uLightColor (positionView.z is the negative viewZ
-  // the original reconstructs from gl_FragCoord.z)
-  const depth = smoothstep(
+  // Distance fog toward uLightColor — faithful port of computeDepth():
+  // linearize gl_FragCoord.z with the per-chapter fog near/far, then ramp.
+  const fogViewZ = perspectiveDepthToViewZ(depth, uFogNear, uFogFar)
+  const fogDepth = smoothstep(
     0.01,
     0.3,
-    viewPos.z.add(uFogNear).div(uFogNear.sub(uFogFar)),
+    viewZToOrthographicDepth(fogViewZ, uFogNear, uFogFar),
   ).mul(transition.oneMinus())
-  outgoing = mix(outgoing, uLightColor, depth)
+  outgoing = mix(outgoing, uLightColor, fogDepth)
 
   const tradingFog = smoothstep(15, -20, posL.y).mul(0.2).mul(trading)
   outgoing = mix(outgoing, vec3(0, 0.4, 0.9), tradingFog.mul(0.2))
@@ -582,6 +620,15 @@ export function createMountainMaterial({
   material.userData.uLightColor = uLightColor
   material.userData.uDarkColor = uDarkColor
   material.userData.uCapitalFog = uCapitalFog
+  material.userData.uMapRepeat = uMapRepeat
+  material.userData.uMapOffset = uMapOffset
+  material.userData.uMapRot = uMapRot
+  material.userData.uMap2Repeat = uMap2Repeat
+  material.userData.uMap2Offset = uMap2Offset
+  material.userData.uMap2Rot = uMap2Rot
+  material.userData.uMixRepeat = uMixRepeat
+  material.userData.uMixOffset = uMixOffset
+  material.userData.uMixRot = uMixRot
 
   return material
 }
