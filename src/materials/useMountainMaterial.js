@@ -53,25 +53,43 @@ import {
 //   tPerlin     → perlinNoise.webp
 //   tVoronoi    → voronoi.webp
 //   tMixMap     → snowRockMix.webp (snow/rock blend mask)
-//   tMap2       → rock_diffuse.webp (detail/second diffuse)
+//   tMap2       → rock_diffuse.webp (detail/second diffuse; capital swaps in
+//                 grass_diffuse.webp)
 //   tMap        → rock_diffuse.webp (stand-in: only sampled when uPage > 2.5)
 //   tRockNormal → rock_normal.webp
 // Omitted (no asset / no equivalent):
 //   tMouse  — mouse trail FBO; with mouse = 0 every term it feeds cancels,
 //             so the trading wireframe grid is dropped too
-//   tArmMap — AO/lightmap; falls back to the shader's own vec4(1) default
 //   tEnvMap — PMREM env map; the scene's ambient + directional lights stand
 //             in for the original's IBL-only lighting
+// tArmMap (AO/lightmap) is the original's single swapped-per-chapter sampler;
+// here capital and trading read dedicated baked lightmaps
+// (capital-lightmap.webp / trading-lightmap.webp), while homepage and maritime
+// fall back to the shader's vec4(1) default.
 export function useMountainMaterial() {
-  const [noiseTex, perlinTex, voronoiTex, mixTex, diffuseTex, rockNormalTex] =
-    useTexture([
-      '/noise.webp',
-      '/perlinNoise.webp',
-      '/voronoi.webp',
-      '/snowRockMix.webp',
-      '/rock_diffuse.webp',
-      '/rock_normal.webp',
-    ])
+  const [
+    noiseTex,
+    perlinTex,
+    voronoiTex,
+    mixTex,
+    diffuseTex,
+    rockNormalTex,
+    grassTex,
+    capitalLightmapTex,
+    tradingLightmapTex,
+    maritimeLightmapTex,
+  ] = useTexture([
+    '/noise.webp',
+    '/perlinNoise.webp',
+    '/voronoi.webp',
+    '/snowRockMix.webp',
+    '/rock_diffuse.webp',
+    '/rock_normal.webp',
+    '/grass_diffuse.webp',
+    '/capital-lightmap.webp',
+    '/trading-lightmap.webp',
+    '/maritime-lightmap.webp',
+  ])
 
   return useMemo(
     () =>
@@ -82,8 +100,23 @@ export function useMountainMaterial() {
         mixTex,
         diffuseTex,
         rockNormalTex,
+        grassTex,
+        capitalLightmapTex,
+        tradingLightmapTex,
+        maritimeLightmapTex,
       }),
-    [noiseTex, perlinTex, voronoiTex, mixTex, diffuseTex, rockNormalTex],
+    [
+      noiseTex,
+      perlinTex,
+      voronoiTex,
+      mixTex,
+      diffuseTex,
+      rockNormalTex,
+      grassTex,
+      capitalLightmapTex,
+      tradingLightmapTex,
+      maritimeLightmapTex,
+    ],
   )
 }
 
@@ -94,6 +127,10 @@ export function createMountainMaterial({
   mixTex,
   diffuseTex,
   rockNormalTex,
+  grassTex,
+  capitalLightmapTex,
+  tradingLightmapTex,
+  maritimeLightmapTex,
 }) {
   for (const t of [
     noiseTex,
@@ -102,6 +139,10 @@ export function createMountainMaterial({
     mixTex,
     diffuseTex,
     rockNormalTex,
+    grassTex,
+    capitalLightmapTex,
+    tradingLightmapTex,
+    maritimeLightmapTex,
   ]) {
     t.wrapS = t.wrapT = RepeatWrapping
   }
@@ -204,8 +245,10 @@ export function createMountainMaterial({
   /* HOMEPAGE & TRADING */
   const hoTraSample = mix(secondSample.mul(1.3), baseSample, mixMapSample.r)
 
-  /* CAPITAL — grass, moss, flowers, valley shading */
-  let capitalSample = mix(secondSample.mul(0.6), baseSample, mixMapSample.r)
+  /* CAPITAL — grass, moss, flowers, valley shading.
+     Capital swaps the "second" diffuse (tMap2) for the grass diffuse. */
+  const grassSample = texture(grassTex, st)
+  let capitalSample = mix(grassSample.mul(0.6), baseSample, mixMapSample.r)
   let capRgb = hueShift(
     capitalSample.rgb,
     texture(noiseTex, st.mul(2.2)).r.sub(0.5).mul(1.8).add(0.2),
@@ -215,7 +258,7 @@ export function createMountainMaterial({
       .mul(0.3)
       .add(1),
   )
-  const lilGrass = texture(diffuseTex, st.mul(8)).rgb
+  const lilGrass = texture(grassTex, st.mul(8)).rgb
   const lilFactor = smoothstep(0.7, 1, texture(perlinTex, st.mul(5)).r)
   capitalSample = vec4(mix(capRgb, lilGrass, lilFactor), capitalSample.a)
   let moss = capitalSample.mul(0.6)
@@ -297,8 +340,16 @@ export function createMountainMaterial({
   base = mix(base, maritimeSample, maritime)
   let diffuseRgb = uColor.mul(base.rgb)
 
-  /* ARM lightmap chain on its vec4(1) fallback (no tArmMap asset) */
-  const armSample0 = vec4(1)
+  /* ARM lightmap chain — capital, trading & maritime sample their baked
+     lightmap textures (the original's tArmMap), with the flipped-Y UV + noise
+     jitter of the reference shader. Homepage keeps the vec4(1) fallback. */
+  const armUv = vec2(st.x, st.y.oneMinus()).add(
+    texture(noiseTex, st.mul(80)).rg.sub(0.5).mul(0.005),
+  )
+  let armSample0 = vec4(1)
+  armSample0 = mix(armSample0, texture(capitalLightmapTex, armUv), capital)
+  armSample0 = mix(armSample0, texture(tradingLightmapTex, armUv), trading)
+  armSample0 = mix(armSample0, texture(maritimeLightmapTex, armUv), maritime)
   const capitalLightmap = mix(
     vec3(0.2, 0.2, 0.1),
     vec3(0.97, 0.8, 0.5),

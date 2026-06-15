@@ -12,7 +12,7 @@ export const Experience = () => {
     <>
       <CameraRig />
       <Environment files='/envmap-min.exr' />
-      <Lighting />
+      {/* <Lighting /> */}
       <OrbitControls />
 
       <Background />

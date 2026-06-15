@@ -57,15 +57,15 @@ export function CameraRig() {
     }
   }
 
-  // useFrame(() => {
-  //   resolve(progress.camFrom, v.posA, v.tgtA)
-  //   resolve(progress.camTo, v.posB, v.tgtB)
-  //   const b = clamp01(progress.camBlend)
-  //   v.pos.lerpVectors(v.posA, v.posB, b)
-  //   v.tgt.lerpVectors(v.tgtA, v.tgtB, b)
-  //   camera.position.copy(v.pos)
-  //   camera.lookAt(v.tgt)
-  // }, -1)
+  useFrame(() => {
+    resolve(progress.camFrom, v.posA, v.tgtA)
+    resolve(progress.camTo, v.posB, v.tgtB)
+    const b = clamp01(progress.camBlend)
+    v.pos.lerpVectors(v.posA, v.posB, b)
+    v.tgt.lerpVectors(v.tgtA, v.tgtB, b)
+    camera.position.copy(v.pos)
+    camera.lookAt(v.tgt)
+  }, -1)
 
   return null
 }

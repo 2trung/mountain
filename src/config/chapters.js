@@ -30,7 +30,7 @@ export const CHAPTERS = [
     key: 'trading',
     label: 'Trading',
     page: 1,
-    camT: 0.74,
+    camT: 0.8,
     mood: {
       bgDark: '#05080f',
       bgLight: '#16273f',
@@ -46,7 +46,7 @@ export const CHAPTERS = [
     key: 'capital',
     label: 'Capital',
     page: 2,
-    camT: 0.5,
+    camT: 0.45,
     mood: {
       bgDark: '#74aed8',
       bgLight: '#e7f1f5',
@@ -65,7 +65,7 @@ export const CHAPTERS = [
     camT: 0.0,
     // Explicit low, near-water viewpoint (the path point sits too high and the
     // white island base fills the frame). Looks across the sea at the island.
-    cam: { pos: [8, -19, 298], lookAt: [-8, 9, 11] },
+    // cam: { pos: [8, -19, 298], lookAt: [-8, 9, 11] },
     mood: {
       bgDark: '#7f8d98',
       bgLight: '#bcc7ce',
