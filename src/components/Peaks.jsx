@@ -1,19 +1,34 @@
-import { useMemo } from 'react'
+import { useEffect } from 'react'
 import { useGLTF } from '@react-three/drei'
-import { MeshStandardNodeMaterial } from 'three/webgpu'
-import { positionLocal, smoothstep } from 'three/tsl'
+import { useFrame } from '@react-three/fiber'
+import { usePeakMaterial } from '../materials/usePeakMaterial'
+import { useTransitionState } from '../state/TransitionContext'
+import { smoothstep } from '../utils/math'
 
-export function Model(props) {
+// The floating backdrop peaks that frame the homepage. They only belong to the
+// home chapter, so they fade out (via the same uTransition the peak shader uses)
+// both during a switch and whenever the active page leaves home.
+export function Peaks(props) {
   const { nodes, materials } = useGLTF('/Homepage.glb')
+  const peaksMaterial = usePeakMaterial(materials.HomepagePeaks)
+  const progress = useTransitionState()
 
-  const peaksMaterial = useMemo(() => {
-    const source = materials.HomepagePeaks
-    const material = new MeshStandardNodeMaterial()
-    for (const key in source) material[key] = source[key]
-    material.transparent = true
-    material.opacityNode = smoothstep(-0.8, 1.0, positionLocal.y)
-    return material
-  }, [materials])
+  useEffect(() => {
+    const u = peaksMaterial.userData
+    u.uFogNear.value = 1
+    u.uFogFar.value = 2000
+    u.uLightColor.value.set('#949fa8')
+  }, [peaksMaterial])
+
+  useFrame(() => {
+    // 0 on home, 1 once we move off it; combined with the live wave value so the
+    // peaks dissolve with the transition and stay gone for the other chapters.
+    const awayFromHome = smoothstep(0, 0.5, progress.page)
+    peaksMaterial.userData.uTransition.value = Math.max(
+      progress.transition,
+      awayFromHome,
+    )
+  })
 
   return (
     <group {...props} dispose={null}>
