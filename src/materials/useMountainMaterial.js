@@ -61,9 +61,10 @@ import {
 //   tPerlin     → perlinNoise.webp
 //   tVoronoi    → voronoi.webp
 //   tMixMap     → snowRockMix.webp (snow/rock blend mask)
-//   tMap2       → rock_diffuse.webp (detail/second diffuse; capital swaps in
-//                 grass_diffuse.webp)
-//   tMap        → rock_diffuse.webp (stand-in: only sampled when uPage > 2.5)
+//   tMap2       → rock_diffuse.webp (detail/second diffuse; capital and
+//                 maritime swap in grass_diffuse.webp)
+//   tMap        → rock_diffuse.webp (only sampled when uPage > 2.5: maritime &
+//                 fortEnergy — the maritime coast's bare-rock layer)
 //   tRockNormal → rock_normal.webp
 // Omitted (no asset / no equivalent):
 //   tMouse  — mouse trail FBO; with mouse = 0 every term it feeds cancels,
@@ -320,11 +321,13 @@ export function createMountainMaterial({
   )
   capitalSample = vec4(adjustSaturation(capRgb, 1.1), capitalSample.a)
 
-  /* MARITIME — coast shading + animated splashes */
+  /* MARITIME — coast shading + animated splashes.
+     tMap = rock_diffuse (baseSample), tMap2 = grass_diffuse (grassSample), so
+     the coast blends bare rock with the grass diffuse like the reference. */
   const mixMaritime = smoothstep(-0.5, 0.8, geoNormal.x)
   let maritimeSample = mix(
     vec4(adjustSaturation(baseSample.rgb, 2), 1),
-    secondSample.mul(vec4(0.8, 0.7, 0.8, 1)),
+    grassSample.mul(vec4(0.8, 0.7, 0.8, 1)),
     mixMaritime,
   )
   // Darken the lower island toward the waterline so the wide base apron reads
@@ -416,6 +419,21 @@ export function createMountainMaterial({
   let armRgb = mix(armSample.rgb, homepageLightmap, homepage)
   armRgb = mix(armRgb, capitalLightmap, capital)
   armRgb = mix(armRgb, tradingLightmap, trading)
+
+  /* Specular occlusion (reference lines 537-539). The scene is IBL-only, so the
+     env map is the sole specular source; without this the maritime coast keeps
+     bright env reflections in its crevices and a grazing Fresnel rim and reads
+     "shiny". aoNode drives MeshStandardNodeMaterial's computeSpecularOcclusion
+     (the same function the GLSL calls) and also AOs the indirect diffuse.
+     occlusion = mix(armRgb.r, 1, transitionWave): armRgb.r is the post-remap
+     lightmap red (the GLSL `armSample.r`); in lit areas it's boosted >1 so the
+     clamp lands on 1 (no diffuse change, full specular), only crevices occlude.
+     Gated to maritime so the other three chapters stay unchanged (ao = 1). */
+  const occlusion = mix(
+    float(1),
+    clamp(mix(armRgb.r, float(1), transitionWave), 0, 1),
+    maritime,
+  )
 
   /* Normals — rock detail + chapter-specific bump layers */
   const transitionNormal = perturbNormalArb(
@@ -606,6 +624,7 @@ export function createMountainMaterial({
   material.normalNode = finalNormal
   material.roughnessNode = roughnessOut
   material.metalnessNode = clamp(uMetalness, 0.04, 1)
+  material.aoNode = occlusion
   material.outputNode = vec4(outgoing, clamp(alpha, 0, 1))
 
   material.userData.uPage = uPage

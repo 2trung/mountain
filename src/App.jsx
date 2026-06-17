@@ -20,11 +20,12 @@ function App() {
           alpha: false,
           stencil: false,
           shadowMap: true,
+          forceWebGL: true,
         })
         return renderer.init().then(() => renderer)
       }}
     >
-      <color attach='background' args={['#0a0e16']} />
+      {/* <color attach='background' args={['#0a0e16']} /> */}
       <Suspense fallback={null}>
         <TransitionProvider>
           <Experience />
