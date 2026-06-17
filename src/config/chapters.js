@@ -73,7 +73,7 @@ export const CHAPTERS = [
     key: 'capital',
     label: 'Capital',
     page: 2,
-    camT: 0.45,
+    camT: 0.43,
     mood: {
       bgDark: '#74aed8',
       bgLight: '#e7f1f5',
