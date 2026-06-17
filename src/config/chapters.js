@@ -98,7 +98,7 @@ export const CHAPTERS = [
     key: 'marine',
     label: 'Marine',
     page: 3,
-    camT: 0.2,
+    camT: 0.19,
     // Explicit low, near-water viewpoint (the path point sits too high and the
     // white island base fills the frame). Looks across the sea at the island.
     // cam: { pos: [8, -19, 298], lookAt: [-8, 9, 11] },
