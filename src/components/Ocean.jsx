@@ -7,16 +7,16 @@ import { useTransitionState } from '../state/TransitionContext'
 import { useChapterVisible } from '../state/useChapterVisible'
 import { smoothstep } from '../utils/math'
 
-// Ocean chapter props (imported via gltfjsx structure) from maritime.glb: the
+// Ocean chapter props (imported via gltfjsx structure) from ocean.glb: the
 // big Sea plane (animated water shader) and the instanced sea rocks, which carry
 // their world placement in their instanceMatrix. (The baked DiffuseCloud
 // instances rendered as flat slabs and are dropped; the sky dome supplies the
 // overcast cloud cover instead.)
 export function Ocean(props) {
-  const { nodes, materials } = useGLTF('/maritime.glb')
+  const { nodes, materials } = useGLTF('/ocean/ocean.glb')
   // The Sea material's baked map is the GLSL `tMap` (the "waves" shoreline mask).
   const water = useWaterMaterial(materials.Sea.map)
-  // TSL port of maritime_sea_rock.glsl, replacing the near-black baked material.
+  // TSL port of ocean_sea_rock.glsl, replacing the near-black baked material.
   const seaRock = useSeaRockMaterial()
   const progress = useTransitionState()
   const ref = useChapterVisible(3)
@@ -50,26 +50,26 @@ export function Ocean(props) {
         renderOrder={2}
       />
       <mesh
-        name='Maritime0'
+        name='Ocean0'
         castShadow
         receiveShadow
-        geometry={nodes.Maritime0.geometry}
+        geometry={nodes.Ocean0.geometry}
         material={materials.DiffuseCloud}
         renderOrder={3}
       />
-      {/* Maritime1/2 are EXT_mesh_gpu_instancing nodes (InstancedMesh): render
+      {/* Ocean1/2 are EXT_mesh_gpu_instancing nodes (InstancedMesh): render
           the node itself so its instanceMatrix places every rock — a plain
           <mesh geometry=...> would collapse them to a single copy at origin.
           Override only the material with the TSL sea-rock port. */}
       <primitive
-        object={nodes.Maritime1}
+        object={nodes.Ocean1}
         material={seaRock}
         castShadow
         receiveShadow
         renderOrder={3}
       />
       <primitive
-        object={nodes.Maritime2}
+        object={nodes.Ocean2}
         material={seaRock}
         castShadow
         receiveShadow
@@ -79,4 +79,4 @@ export function Ocean(props) {
   )
 }
 
-useGLTF.preload('/maritime.glb')
+useGLTF.preload('/ocean/ocean.glb')

@@ -73,7 +73,7 @@ import {
 //             in for the original's IBL-only lighting
 // tArmMap (AO/lightmap) is the original's single swapped-per-chapter sampler;
 // here meadow and night read dedicated baked lightmaps
-// (capital-lightmap.webp / trading-lightmap.webp), while snow and ocean
+// (meadow-lightmap.webp / night-lightmap.webp), while snow and ocean
 // fall back to the shader's vec4(1) default.
 export function useMountainMaterial() {
   const [
@@ -95,9 +95,9 @@ export function useMountainMaterial() {
     '/rock_diffuse.webp',
     '/rock_normal.webp',
     '/grass_diffuse.webp',
-    '/capital-lightmap.webp',
-    '/trading-lightmap.webp',
-    '/maritime-lightmap.webp',
+    '/meadow/meadow-lightmap.webp',
+    '/night/night-lightmap.webp',
+    '/ocean/ocean-lightmap.webp',
   ])
 
   return useMemo(

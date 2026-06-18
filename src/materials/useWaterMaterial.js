@@ -34,18 +34,18 @@ import {
 } from 'three/tsl'
 import { adjustSaturation, hueShift, tangentTransform } from './tslUtils'
 
-// TSL port of maritime_water.glsl.
+// TSL port of ocean_water.glsl.
 //
 // Sampler → asset mapping:
 //   tNoiseNormal → water-normal.webp
 //   tNoise       → noise.webp
 //   tMap (foam)  → perlinNoise.webp
-//   tDiffuse     → maritime-lightmap.webp (processed via reflect_mountain_maritime.glsl logic)
+//   tDiffuse     → ocean-lightmap.webp (processed via reflect_mountain_ocean.glsl logic)
 //
 // Reflection approach:
 //   The original used texture2DProj(tDiffuse, vReflectUv) where tDiffuse was a
-//   live planar-reflection RT rendered through reflect_mountain_maritime.glsl.
-//   Here we use maritime-lightmap.webp as a static tDiffuse substitute:
+//   live planar-reflection RT rendered through reflect_mountain_ocean.glsl.
+//   Here we use ocean-lightmap.webp as a static tDiffuse substitute:
 //   - vReflectUv = textureMatrix * vec4(position, 1.0) replicated via
 //     uTextureMatrix.mul(vec4(positionLocal, 1)) — values baked from the scene
 //   - the reflect shader's contrast curve is applied inline
@@ -67,7 +67,7 @@ export function useWaterMaterial(foamTex) {
   const [normalTex, noiseTex, lightmapTex] = useTexture([
     '/water-normal.webp',
     '/noise.webp',
-    '/maritime-lightmap.webp',
+    '/ocean/ocean-lightmap.webp',
   ])
 
   return useMemo(
@@ -211,7 +211,7 @@ export function createWaterMaterial({
     const nTex3 = vec3(n3.x.mul(0.1), n3.y.mul(0.1), n3.z)
     normal = normalize(tangentTransform(viewPos, normal, st, nTex3))
 
-    /* tDiffuse — maritime-lightmap.webp via reflect_mountain_maritime.glsl logic.
+    /* tDiffuse — ocean-lightmap.webp via reflect_mountain_ocean.glsl logic.
        vReflectUv = textureMatrix * vec4(position, 1.0), replicated from vertex shader.
        Normal perturbation added before perspective divide (matches texture2DProj). */
     const reflectVec = uTextureMatrix.mul(vec4(positionLocal, 1))

@@ -423,21 +423,21 @@ The camera follows a **CatmullRomCurve3** built from polyline vertices in the GL
 
 ### Peaks (`Peaks.jsx` + `usePeakMaterial.js`)
 
-**🇻🇳:** 3 đỉnh núi phụ từ `Homepage.glb`, chỉ hiện ở snow. Material có tuyết bay (windy snow) cuộn theo thời gian + bump map perlin. Fade out khi rời cảnh.
+**🇻🇳:** 3 đỉnh núi phụ từ `snow.glb`, chỉ hiện ở snow. Material có tuyết bay (windy snow) cuộn theo thời gian + bump map perlin. Fade out khi rời cảnh.
 
-**🇬🇧:** 3 backdrop peak meshes from `Homepage.glb`, snow-only. Material adds scrolling windy snow + perlin bump. Fades out via `uTransition` when leaving.
+**🇬🇧:** 3 backdrop peak meshes from `snow.glb`, snow-only. Material adds scrolling windy snow + perlin bump. Fades out via `uTransition` when leaving.
 
 ### Meadow (`Meadow.jsx`)
 
-**🇻🇳:** Thảo nguyên + núi nền từ `capital-min.glb`. Chỉ hiện khi `page === 2`. Dùng `useChapterVisible` để toggle visibility.
+**🇻🇳:** Thảo nguyên + núi nền từ `meadow-min.glb`. Chỉ hiện khi `page === 2`. Dùng `useChapterVisible` để toggle visibility.
 
-**🇬🇧:** Prairie + background mountains from `capital-min.glb`. Only visible when `page === 2`. Uses `useChapterVisible` to toggle.
+**🇬🇧:** Prairie + background mountains from `meadow-min.glb`. Only visible when `page === 2`. Uses `useChapterVisible` to toggle.
 
 ### Ocean (`Ocean.jsx` + `useWaterMaterial.js`)
 
-**🇻🇳:** Biển từ `maritime.glb`. Water material tạo sóng bằng tổng các hàm sin, 3 lớp normal map animated, specular + translucency, foam sparkle. Reflection được approximate (không có planar reflection trong WebGPU).
+**🇻🇳:** Biển từ `ocean.glb`. Water material tạo sóng bằng tổng các hàm sin, 3 lớp normal map animated, specular + translucency, foam sparkle. Reflection được approximate (không có planar reflection trong WebGPU).
 
-**🇬🇧:** Sea plane from `maritime.glb`. Water shader builds rippling surface from sum-of-sines height + 3 animated normal-map layers + specular/translucency + foam. Reflection is approximated (no planar reflection in WebGPU).
+**🇬🇧:** Sea plane from `ocean.glb`. Water shader builds rippling surface from sum-of-sines height + 3 animated normal-map layers + specular/translucency + foam. Reflection is approximated (no planar reflection in WebGPU).
 
 ---
 
