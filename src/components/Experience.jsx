@@ -4,8 +4,8 @@ import { CameraRig } from './CameraRig'
 import { Lighting } from './Lighting'
 import { Mountain } from './Mountain'
 import { Peaks } from './Peaks'
-import { Capital } from './Capital'
-import { Maritime } from './Maritime'
+import { Meadow } from './Meadow'
+import { Ocean } from './Ocean'
 
 export const Experience = () => {
   return (
@@ -18,8 +18,8 @@ export const Experience = () => {
       <Background />
       <Mountain />
       <Peaks />
-      <Capital />
-      <Maritime />
+      <Meadow />
+      <Ocean />
     </>
   )
 }

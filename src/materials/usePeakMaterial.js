@@ -27,14 +27,14 @@ import {
 import { dHdxyFwd, perturbNormalArb, tangentTransform } from './tslUtils'
 
 // TSL port of the reference GLSL peaks shader (peak_fragment.glsl,
-// SHADER_NAME HomepagePeaks) — the generic "sixty" PBR material with three
+// SHADER_NAME SnowPeaks) — the generic "sixty" PBR material with three
 // custom areas: scrolling windy snow blended into the diffuse, a perlin bump
 // layered on the normal map, and distance fog + height/transition alpha
 // fades. Like the mountain, the standard-material slots replace the
 // hand-written PBR pipeline and outputNode reproduces the post-lighting tail.
 //
 // Sampler → asset mapping:
-//   tMap       → the HomepagePeaks GLB material's baseColor texture
+//   tMap       → the SnowPeaks GLB material's baseColor texture
 //   tNoise     → /noise.webp
 //   tPerlin    → /perlinNoise.webp
 //   tNormalMap → /noise-solid-normal.webp (stand-in: the GLB exports no

@@ -3,22 +3,22 @@ import { useGLTF } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useChapterVisible } from '../state/useChapterVisible'
 import { useTransitionState } from '../state/TransitionContext'
-import { useCapitalForegroundMaterial } from '../materials/useCapitalForegroundMaterial'
+import { useMeadowForegroundMaterial } from '../materials/useMeadowForegroundMaterial'
 import { useLakeMaterial } from '../materials/useLakeMaterial'
 import { clamp01, smoothstep } from '../utils/math'
 
-export function Capital(props) {
-  const { nodes, materials } = useGLTF('/capital-min.glb')
+export function Meadow(props) {
+  const { nodes, materials } = useGLTF('/meadow/meadow-min.glb')
   const ref = useChapterVisible(2)
   const progress = useTransitionState()
   const camera = useThree((s) => s.camera)
 
-  // The GLB CapitalForeground material carries the baked prairie textures: its
+  // The GLB MeadowForeground material carries the baked prairie textures: its
   // base map (seamless grass, uv0) and its emissive lightmap (uv1). Feed both
-  // into the TSL port of capital_foreground.glsl.
-  const foreground = useCapitalForegroundMaterial({
-    baseMap: materials.CapitalForeground.map,
-    lightMap: materials.CapitalForeground.emissiveMap,
+  // into the TSL port of meadow_foreground.glsl.
+  const foreground = useMeadowForegroundMaterial({
+    baseMap: materials.MeadowForeground.map,
+    lightMap: materials.MeadowForeground.emissiveMap,
   })
   const lake = useLakeMaterial()
 
@@ -46,22 +46,22 @@ export function Capital(props) {
   return (
     <group ref={ref} {...props} dispose={null}>
       <group name='MONTFORT'>
-        <group name='Capital' position={[-69.803, 6.596, 0.499]}>
+        <group name='Meadow' position={[-69.803, 6.596, 0.499]}>
           <mesh
-            name='capital-prairie'
+            name='meadow-prairie'
             renderOrder={3}
             castShadow
             receiveShadow
-            geometry={nodes['capital-prairie'].geometry}
+            geometry={nodes['meadow-prairie'].geometry}
             material={foreground}
             position={[-100.174, -37.921, 34.493]}
           />
           <mesh
-            name='capitalMGmountains'
+            name='meadowMGmountains'
             castShadow
             receiveShadow
-            geometry={nodes.capitalMGmountains.geometry}
-            material={materials.CapitalBackground}
+            geometry={nodes.meadowMGmountains.geometry}
+            material={materials.MeadowBackground}
             position={[-37.625, 27.279, 105.855]}
             rotation={[0, -0.77, 0]}
             scale={1.108}
@@ -85,4 +85,4 @@ export function Capital(props) {
   )
 }
 
-useGLTF.preload('/capital-min.glb')
+useGLTF.preload('/meadow/meadow-min.glb')

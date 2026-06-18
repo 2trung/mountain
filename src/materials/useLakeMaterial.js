@@ -30,7 +30,7 @@ import {
 import { rotateUv, tangentTransform } from './tslUtils'
 
 // TSL port of the reference GLSL lake shader (lake.glsl) — the reflective pond
-// in the capital valley. It rotates the uv, drives two animated normal-map
+// in the meadow valley. It rotates the uv, drives two animated normal-map
 // layers through the tangent frame, then mixes a real planar reflection of the
 // scene (the mountain) with a Blinn-Phong specular highlight, fading on
 // transition.
@@ -39,7 +39,7 @@ import { rotateUv, tangentTransform } from './tslUtils'
 // texture2DProj(tDiffuse, vReflectUv). The WebGPU/TSL backend provides exactly
 // that through reflector(): a mirror render-target node whose `target` Object3D
 // defines the reflection plane. We orient that plane by parenting target to the
-// (horizontal) lake mesh in Capital.jsx, and ripple the lookup by offsetting the
+// (horizontal) lake mesh in Meadow.jsx, and ripple the lookup by offsetting the
 // reflector uv with the perturbed surface normal — the equivalent of the GLSL's
 // `reflectUv.rgb += normal`.
 //
@@ -67,13 +67,13 @@ export function createLakeMaterial({ normalTex, noiseTex }) {
   }
 
   const uTransition = uniform(0)
-  const uVisible = uniform(0) // chapter gate (1 on capital)
+  const uVisible = uniform(0) // chapter gate (1 on meadow)
   // Reference uTransitionColor (linear RGB).
   const uTransitionColor = uniform(new Color(0.7084, 0.6939, 0.6584))
   const uDistortion = uniform(0.05) // ripple strength of the reflection lookup
 
   // Live planar reflection of the scene. `target` (added under the lake mesh in
-  // Capital.jsx) defines the mirror plane; the node samples it in screen space.
+  // Meadow.jsx) defines the mirror plane; the node samples it in screen space.
   const mirror = reflector({ resolutionScale: 0.5, bounces: false })
 
   const st = uv()

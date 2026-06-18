@@ -47,9 +47,9 @@ src/
 │   ├── CameraRig.jsx                 # Camera di chuyển dọc path cong (CatmullRomCurve3)
 │   ├── Background.jsx                # Sky dome — gradient bầu trời + mây
 │   ├── Lighting.jsx                  # Đèn ambient + directional, thay đổi theo mood
-│   ├── Peaks.jsx                     # Đỉnh núi phụ (homepage only)
-│   ├── Capital.jsx                   # Thảo nguyên + núi nền (capital chapter)
-│   └── Maritime.jsx                  # Biển + đá (marine chapter)
+│   ├── Peaks.jsx                     # Đỉnh núi phụ (snow only)
+│   ├── Meadow.jsx                    # Thảo nguyên + núi nền (meadow chapter)
+│   └── Ocean.jsx                     # Biển + đá (ocean chapter)
 ├── materials/
 │   ├── useMountainMaterial.js        # ★ Material chính của núi (TSL shader)
 │   ├── mountain.glsl                 # ★ Shader gốc (GLSL) — dùng làm tham chiếu
@@ -59,7 +59,7 @@ src/
 │   ├── useWaterMaterial.js           # Material nước biển
 │   └── tslUtils.js                   # Các hàm tiện ích: hueShift, perturbNormal...
 ├── config/
-│   └── chapters.js                   # Định nghĩa 4 chapter: page, camT, mood
+│   └── chapters.js                   # Định nghĩa 4 chapter (snow, night, meadow, ocean): page, camT, mood
 ├── state/
 │   ├── TransitionContext.jsx          # ★ State machine chuyển cảnh + mood interpolation
 │   └── useChapterVisible.js          # Toggle visibility cho chapter-specific objects
@@ -92,9 +92,9 @@ src/
 │  │  │  │  ├── Lighting     ← đọc mood.amb/dir/dirCol   │  │  │  │
 │  │  │  │  ├── Background   ← đọc mood.bgDark/bgLight   │  │  │  │
 │  │  │  │  ├── Mountain     ← đọc page/transition/mood  │  │  │  │
-│  │  │  │  ├── Peaks        ← chỉ hiện ở homepage       │  │  │  │
-│  │  │  │  ├── Capital      ← chỉ hiện ở capital        │  │  │  │
-│  │  │  │  └── Maritime     ← chỉ hiện ở marine         │  │  │  │
+│  │  │  │  ├── Peaks        ← chỉ hiện ở snow           │  │  │  │
+│  │  │  │  ├── Meadow       ← chỉ hiện ở meadow         │  │  │  │
+│  │  │  │  └── Ocean        ← chỉ hiện ở ocean          │  │  │  │
 │  │  │  └───────────────────────────────────────────────┘  │  │  │
 │  │  └─────────────────────────────────────────────────────┘  │  │
 │  └───────────────────────────────────────────────────────────┘  │
@@ -137,14 +137,14 @@ Mỗi chapter có 3 thuộc tính:
 
 ### Bảng chapters (`src/config/chapters.js`):
 
-| #   | Key       | page | camT  | Bầu trời        | Đèn           | Mô tả                  |
-| --- | --------- | ---- | ----- | --------------- | ------------- | ---------------------- |
-| 0   | `home`    | 0    | 1.0   | Xám-xanh nhạt   | Trắng, sáng   | Tuyết trắng, homepage  |
-| 1   | `trading` | 1    | 0.74  | Đen-xanh đậm    | Cam ấm, tối   | Đêm khuya, giao dịch   |
-| c   | `capital` | 2    | 0.5   | Xanh dương nhạt | Vàng ấm, sáng | Ngày nắng, thảo nguyên |
-| 3   | `marine`  | 3    | 0.0\* | Xám-xanh biển   | Xám nhạt      | Biển mây, hải đảo      |
+| #   | Key      | page | camT  | Bầu trời        | Đèn           | Mô tả                  |
+| --- | -------- | ---- | ----- | --------------- | ------------- | ---------------------- |
+| 0   | `snow`   | 0    | 1.0   | Xám-xanh nhạt   | Trắng, sáng   | Tuyết trắng, trang chủ |
+| 1   | `night`  | 1    | 0.74  | Đen-xanh đậm    | Cam ấm, tối   | Đêm khuya, giao dịch   |
+| 2   | `meadow` | 2    | 0.5   | Xanh dương nhạt | Vàng ấm, sáng | Ngày nắng, thảo nguyên |
+| 3   | `ocean`  | 3    | 0.0\* | Xám-xanh biển   | Xám nhạt      | Biển mây, hải đảo      |
 
-> \*Marine dùng camera override `cam: { pos: [8, -19, 298], lookAt: [-8, 9, 11] }` thay vì camT.
+> \*Ocean dùng camera override `cam: { pos: [8, -19, 298], lookAt: [-8, 9, 11] }` thay vì camT.
 
 ### 🇬🇧
 
@@ -170,7 +170,7 @@ const uTransition = uniform(0)          // 0→1: sóng phủ, 1→0: sóng lộ
 const uTransitionDirection = uniform(1) // 1 = sóng có hình, 0 = fade phẳng
 const uColor = uniform(new Color(1,1,1)) // Tint màu chung
 const uFogNear / uFogFar               // Khoảng cách sương mù
-const uLightColor / uDarkColor          // Màu sương mù / tint capital
+const uLightColor / uDarkColor          // Màu sương mù / tint meadow
 ```
 
 #### 5.2 Chapter Masks (chọn chapter không dùng if/else)
@@ -178,17 +178,17 @@ const uLightColor / uDarkColor          // Màu sương mù / tint capital
 Đây là kỹ thuật quan trọng: dùng `step()` để tạo mask, **không dùng if/else** (GPU không thích branching).
 
 ```js
-// Nếu uPage < 0.5 → homepage = 1, còn lại = 0
-const homepage = step(0.5, uPage).oneMinus()
+// Nếu uPage < 0.5 → snow = 1, còn lại = 0
+const snow = step(0.5, uPage).oneMinus()
 
-// Nếu 0.5 ≤ uPage < 1.5 → trading = 1
-const trading = step(0.5, uPage).mul(step(1.5, uPage).oneMinus())
+// Nếu 0.5 ≤ uPage < 1.5 → night = 1
+const night = step(0.5, uPage).mul(step(1.5, uPage).oneMinus())
 
-// Nếu 1.5 ≤ uPage < 2.5 → capital = 1
-const capital = step(1.5, uPage).mul(step(2.5, uPage).oneMinus())
+// Nếu 1.5 ≤ uPage < 2.5 → meadow = 1
+const meadow = step(1.5, uPage).mul(step(2.5, uPage).oneMinus())
 
-// Nếu 2.5 ≤ uPage < 3.5 → maritime = 1
-const maritime = step(2.5, uPage).mul(step(3.5, uPage).oneMinus())
+// Nếu 2.5 ≤ uPage < 3.5 → ocean = 1
+const ocean = step(2.5, uPage).mul(step(3.5, uPage).oneMinus())
 ```
 
 **Cách đọc:** `step(edge, x)` trả về 0 nếu x < edge, 1 nếu x ≥ edge. Nhân 2 step ngược nhau = chỉ 1 vùng cho ra 1.
@@ -196,10 +196,10 @@ const maritime = step(2.5, uPage).mul(step(3.5, uPage).oneMinus())
 #### 5.3 Base Color (màu cơ bản)
 
 ```
-                    ┌─ homepage/trading ─┐     ┌── capital ──┐     ┌── maritime ──┐
+                    ┌─── snow/night ─────┐     ┌── meadow ───┐     ┌─── ocean ────┐
                     │                    │     │             │     │              │
 baseSample ─────────┤                    │     │             │     │              │
-(màu trắng/xám)     │   hoTraSample      │     │ capitalSample│    │ maritimeSample│
+(màu trắng/xám)     │  snowNightSample   │     │ meadowSample │    │  oceanSample  │
                     │ = mix(1.3×second,  │     │ = grass,    │     │ = coast +    │
 secondSample ───────┤    base, mixMap)   │     │   moss,     │     │   splashes   │
 (diffuse texture)   │                    │     │   flowers   │     │              │
@@ -212,18 +212,18 @@ secondSample ───────┤    base, mixMap)   │     │   moss,    
 ```
 
 - `mixMapSample.r` (từ `snowRockMix.webp`): mask blend giữa tuyết (trắng) và đá (diffuse)
-- `secondSample`: diffuse texture, được tint xám-xanh cho homepage
-- `hoTraSample = mix(1.3 × second, base, mixMap)` → đá sáng hơn, tuyết trắng
+- `secondSample`: diffuse texture, được tint xám-xanh cho snow
+- `snowNightSample = mix(1.3 × second, base, mixMap)` → đá sáng hơn, tuyết trắng
 
 #### 5.4 Từng Chapter vẽ gì?
 
-**Homepage & Trading** (dùng chung `hoTraSample`):
+**Snow & Night** (dùng chung `snowNightSample`):
 
 - Màu cơ bản giống nhau
 - Khác nhau ở: lightmap, sương mù, normal map, hiệu ứng tuyết bay
-- Trading có thêm fog xanh-dương + grid wireframe (đã tắt trong bản này)
+- Night có thêm fog xanh-dương + grid wireframe (đã tắt trong bản này)
 
-**Capital** (thảo nguyên):
+**Meadow** (thảo nguyên):
 
 - Hue shift theo noise → cỏ có nhiều màu
 - Thêm cỏ nhỏ (lilGrass) ở vùng perlin noise cao
@@ -231,7 +231,7 @@ secondSample ───────┤    base, mixMap)   │     │   moss,    
 - Thêm rêu (moss) ở vùng thấp
 - Đáy núi tối hơn + đổi màu
 
-**Maritime** (hải đảo):
+**Ocean** (hải đảo):
 
 - Blend theo normal.x (hướng nhìn) → mặt đá khô/ướt
 - Thêm splash animation (sóng vỗ) bằng sin()
@@ -245,11 +245,11 @@ Rock Normal Map (rock_normal.webp)
         ▼
   ┌─ tangentTransform() ──→ rockNormal
   │
-  ├─ homepage/trading: perturbNormalArb(perlin, 10×uv) + trading thêm lớp thứ 2
+  ├─ snow/night: perturbNormalArb(perlin, 10×uv) + night thêm lớp thứ 2
   │
-  ├─ capital: perturbNormalArb(diffuse, 15×uv)
+  ├─ meadow: perturbNormalArb(diffuse, 15×uv)
   │
-  └─ maritime: perturbNormalArb(perlin, uv, strength=20)
+  └─ ocean: perturbNormalArb(perlin, uv, strength=20)
         │
         ▼
   perturbedNormal → mix(transitionNormal, transitionWave) → finalNormal
@@ -259,11 +259,11 @@ Rock Normal Map (rock_normal.webp)
 
 Sau khi Three.js chuẩn PBR chiếu sáng xong, `outputNode` chỉnh lại:
 
-1. **Capital color correction**: tint theo độ cao + fog thung lũng
+1. **Meadow color correction**: tint theo độ cao + fog thung lũng
 2. **Desaturate**: giảm bão hòa màu khi transition đang chạy
 3. **Emissive wave**: mặt trước của sóng phát sáng xanh-lục
 4. **Distance fog**: hòa vào `uLightColor` theo khoảng cách
-5. **Trading fog**: thêm lớp sương mù xanh-dương
+5. **Night fog**: thêm lớp sương mù xanh-dương
 6. **Alpha**: fade cạnh cho fortEnergy + fade theo chapter
 
 ### 🇬🇧
@@ -378,10 +378,10 @@ mountains.glb
 Mỗi chapter có `camT` (0→1) xác định vị trí trên đường cong:
 
 ```
-camT = 1.0  ←── Home (đỉnh, cuối path)
-camT = 0.74 ←── Trading
-camT = 0.5  ←── Capital
-camT = 0.0  ←── Marine (đầu path, nhưng dùng camera override)
+camT = 1.0  ←── Snow (đỉnh, cuối path)
+camT = 0.74 ←── Night
+camT = 0.5  ←── Meadow
+camT = 0.0  ←── Ocean (đầu path, nhưng dùng camera override)
 ```
 
 Khi chuyển chapter, camera **lerp mượt** giữa 2 vị trí:
@@ -411,33 +411,33 @@ The camera follows a **CatmullRomCurve3** built from polyline vertices in the GL
 
 ### Background (`Background.jsx` + `useBackgroundMaterial.js`)
 
-**🇻🇳:** Sky dome hình cầu, luôn recenter theo camera. Vẽ gradient bầu trời + mây procedural. Trading có thêm "data lines" (đường kẻ ngang phát sáng). Khi transition, hòa sang màu `uTransitionColor`.
+**🇻🇳:** Sky dome hình cầu, luôn recenter theo camera. Vẽ gradient bầu trời + mây procedural. Night có thêm "data lines" (đường kẻ ngang phát sáng). Khi transition, hòa sang màu `uTransitionColor`.
 
-**🇬🇧:** A sky dome that re-centers on the camera each frame. Renders a vertical gradient + procedural cloud bands. Trading adds faint horizontal "data" lines. During transitions, blends toward a wash color.
+**🇬🇧:** A sky dome that re-centers on the camera each frame. Renders a vertical gradient + procedural cloud bands. Night adds faint horizontal "data" lines. During transitions, blends toward a wash color.
 
 ### Clouds (`useCloudMaterial.js`)
 
-**🇻🇳:** Mây là các **instanced quads** (nhiều tấm phẳng xếp chồng). Mỗi quad có seed riêng → noise khác nhau. UV.y bị méo bởi 3 lớp noise cuộn → tạo hình mây. Chỉ hiện ở homepage, bị "guillotine" (cắt từ dưới lên) khi rời home.
+**🇻🇳:** Mây là các **instanced quads** (nhiều tấm phẳng xếp chồng). Mỗi quad có seed riêng → noise khác nhau. UV.y bị méo bởi 3 lớp noise cuộn → tạo hình mây. Chỉ hiện ở snow, bị "guillotine" (cắt từ dưới lên) khi rời cảnh.
 
-**🇬🇧:** Clouds are instanced quads with per-instance seeds. UV.y is distorted by 3 scrolling noise layers to create billowing shapes. Only visible on homepage; a screen-space "guillotine" wipe erases them bottom-up when leaving.
+**🇬🇧:** Clouds are instanced quads with per-instance seeds. UV.y is distorted by 3 scrolling noise layers to create billowing shapes. Only visible on the snow scene; a screen-space "guillotine" wipe erases them bottom-up when leaving.
 
 ### Peaks (`Peaks.jsx` + `usePeakMaterial.js`)
 
-**🇻🇳:** 3 đỉnh núi phụ từ `Homepage.glb`, chỉ hiện ở homepage. Material có tuyết bay (windy snow) cuộn theo thời gian + bump map perlin. Fade out khi rời home.
+**🇻🇳:** 3 đỉnh núi phụ từ `snow.glb`, chỉ hiện ở snow. Material có tuyết bay (windy snow) cuộn theo thời gian + bump map perlin. Fade out khi rời cảnh.
 
-**🇬🇧:** 3 backdrop peak meshes from `Homepage.glb`, homepage-only. Material adds scrolling windy snow + perlin bump. Fades out via `uTransition` when leaving home.
+**🇬🇧:** 3 backdrop peak meshes from `snow.glb`, snow-only. Material adds scrolling windy snow + perlin bump. Fades out via `uTransition` when leaving.
 
-### Capital (`Capital.jsx`)
+### Meadow (`Meadow.jsx`)
 
-**🇻🇳:** Thảo nguyên + núi nền từ `capital-min.glb`. Chỉ hiện khi `page === 2`. Dùng `useChapterVisible` để toggle visibility.
+**🇻🇳:** Thảo nguyên + núi nền từ `meadow-min.glb`. Chỉ hiện khi `page === 2`. Dùng `useChapterVisible` để toggle visibility.
 
-**🇬🇧:** Prairie + background mountains from `capital-min.glb`. Only visible when `page === 2`. Uses `useChapterVisible` to toggle.
+**🇬🇧:** Prairie + background mountains from `meadow-min.glb`. Only visible when `page === 2`. Uses `useChapterVisible` to toggle.
 
-### Maritime (`Maritime.jsx` + `useWaterMaterial.js`)
+### Ocean (`Ocean.jsx` + `useWaterMaterial.js`)
 
-**🇻🇳:** Biển từ `maritime.glb`. Water material tạo sóng bằng tổng các hàm sin, 3 lớp normal map animated, specular + translucency, foam sparkle. Reflection được approximate (không có planar reflection trong WebGPU).
+**🇻🇳:** Biển từ `ocean.glb`. Water material tạo sóng bằng tổng các hàm sin, 3 lớp normal map animated, specular + translucency, foam sparkle. Reflection được approximate (không có planar reflection trong WebGPU).
 
-**🇬🇧:** Sea plane from `maritime.glb`. Water shader builds rippling surface from sum-of-sines height + 3 animated normal-map layers + specular/translucency + foam. Reflection is approximated (no planar reflection in WebGPU).
+**🇬🇧:** Sea plane from `ocean.glb`. Water shader builds rippling surface from sum-of-sines height + 3 animated normal-map layers + specular/translucency + foam. Reflection is approximated (no planar reflection in WebGPU).
 
 ---
 

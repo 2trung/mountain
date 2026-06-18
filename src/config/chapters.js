@@ -3,7 +3,7 @@ import { clamp01 } from '../utils/math'
 // The 4 scene states. `page` feeds the mountain shader's uPage (branchless
 // step() masks select the chapter look — see moutain_fragment.glsl); `camT` is
 // the normalized position [0..1] along the GLB CameraPath/TargetPath curves.
-// The path's end (t = 1) is authored to land exactly on Point-Homepage, so home
+// The path's end (t = 1) is authored to land exactly on Point-Homepage, so snow
 // sits at 1 and the journey flies back along the path toward t = 0.
 //
 // `mood` now mirrors the reference per-chapter mountainsConfig objects. Mapping
@@ -20,8 +20,8 @@ import { clamp01 } from '../utils/math'
 // itself is a plain camera-depth fog (no per-chapter near/far — see Mountain).
 export const CHAPTERS = [
   {
-    key: 'home',
-    label: 'Home',
+    key: 'snow',
+    label: 'Snow',
     page: 0,
     camT: 1.0,
     mood: {
@@ -45,8 +45,8 @@ export const CHAPTERS = [
     },
   },
   {
-    key: 'trading',
-    label: 'Trading',
+    key: 'night',
+    label: 'Night',
     page: 1,
     camT: 0.8,
     mood: {
@@ -70,8 +70,8 @@ export const CHAPTERS = [
     },
   },
   {
-    key: 'capital',
-    label: 'Capital',
+    key: 'meadow',
+    label: 'Meadow',
     page: 2,
     camT: 0.43,
     mood: {
@@ -95,8 +95,8 @@ export const CHAPTERS = [
     },
   },
   {
-    key: 'marine',
-    label: 'Marine',
+    key: 'ocean',
+    label: 'Ocean',
     page: 3,
     camT: 0.19,
     // Explicit low, near-water viewpoint (the path point sits too high and the
@@ -138,7 +138,7 @@ export const IDENTITY_MAPS = {
 export const mapsForPage = (page) =>
   CHAPTERS[Math.round(clamp01(page / 3) * 3)].maps ?? IDENTITY_MAPS
 
-// leva dropdown map: { Home: 0, Trading: 1, ... } → chapter index
+// leva dropdown map: { Snow: 0, Night: 1, ... } → chapter index
 export const CHAPTER_OPTIONS = CHAPTERS.reduce(
   (acc, c, i) => ({ ...acc, [c.label]: i }),
   {},

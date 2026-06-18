@@ -5,12 +5,12 @@ import { usePeakMaterial } from '../materials/usePeakMaterial'
 import { useTransitionState } from '../state/TransitionContext'
 import { smoothstep } from '../utils/math'
 
-// The floating backdrop peaks that frame the homepage. They only belong to the
-// home chapter, so they fade out (via the same uTransition the peak shader uses)
-// both during a switch and whenever the active page leaves home.
+// The floating backdrop peaks that frame the snow scene. They only belong to the
+// snow chapter, so they fade out (via the same uTransition the peak shader uses)
+// both during a switch and whenever the active page leaves it.
 export function Peaks(props) {
-  const { nodes, materials } = useGLTF('/Homepage.glb')
-  const peaksMaterial = usePeakMaterial(materials.HomepagePeaks)
+  const { nodes, materials } = useGLTF('/snow/snow.glb')
+  const peaksMaterial = usePeakMaterial(materials.SnowPeaks)
   const progress = useTransitionState()
 
   useEffect(() => {
@@ -21,12 +21,12 @@ export function Peaks(props) {
   }, [peaksMaterial])
 
   useFrame(() => {
-    // 0 on home, 1 once we move off it; combined with the live wave value so the
+    // 0 on snow, 1 once we move off it; combined with the live wave value so the
     // peaks dissolve with the transition and stay gone for the other chapters.
-    const awayFromHome = smoothstep(0, 0.5, progress.page)
+    const awayFromSnow = smoothstep(0, 0.5, progress.page)
     peaksMaterial.userData.uTransition.value = Math.max(
       progress.transition,
-      awayFromHome,
+      awayFromSnow,
     )
   })
 
@@ -34,33 +34,33 @@ export function Peaks(props) {
     <group {...props} dispose={null}>
       <group name='MONTFORT'>
         <mesh
-          name='HomepagePeaks'
+          name='SnowPeaks'
           renderOrder={3}
           castShadow
           receiveShadow
-          geometry={nodes.HomepagePeaks.geometry}
+          geometry={nodes.SnowPeaks.geometry}
           material={peaksMaterial}
           position={[149.026, 14.095, 4.235]}
           rotation={[-0.048, 0.441, -0.153]}
           scale={[7.654, 7.654, 9.185]}
         />
         <mesh
-          name='HomepagePeaksBG'
+          name='SnowPeaksBG'
           renderOrder={3}
           castShadow
           receiveShadow
-          geometry={nodes.HomepagePeaksBG.geometry}
+          geometry={nodes.SnowPeaksBG.geometry}
           material={peaksMaterial}
           position={[-201.628, -35.987, 438.015]}
           rotation={[0.943, -1.443, 0.951]}
           scale={[21.869, 21.869, 26.243]}
         />
         <mesh
-          name='HomepagePeaks002'
+          name='SnowPeaks002'
           renderOrder={3}
           castShadow
           receiveShadow
-          geometry={nodes.HomepagePeaks002.geometry}
+          geometry={nodes.SnowPeaks002.geometry}
           material={peaksMaterial}
           position={[90.038, 5.263, -64.187]}
           rotation={[2.876, 1.009, -2.628]}
@@ -71,4 +71,4 @@ export function Peaks(props) {
   )
 }
 
-useGLTF.preload('/Homepage.glb')
+useGLTF.preload('/snow/snow.glb')

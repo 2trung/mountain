@@ -28,11 +28,11 @@ import {
 } from 'three/tsl'
 import { hueShift, adjustSaturation, dHdxyFwd, perturbNormalArb } from './tslUtils'
 
-// TSL port of the reference GLSL capital foreground shader
-// (capital_foreground.glsl) — the grassy prairie slab in front of the capital
+// TSL port of the reference GLSL meadow foreground shader
+// (meadow_foreground.glsl) — the grassy prairie slab in front of the meadow
 // mountain, with a transparent lake hole (the lake plane shows through it), a
 // grass/hue-shifted color grade, the mountain-cast shadow, baked lightmap
-// emissive, and the capital valley fog / atmosphere wash on the lit output.
+// emissive, and the meadow valley fog / atmosphere wash on the lit output.
 //
 // The reference is a hand-written PBR pass forced to metallic = 1 (so the
 // diffuse term is zero and the surface is lit purely by image-based lighting +
@@ -40,11 +40,11 @@ import { hueShift, adjustSaturation, dHdxyFwd, perturbNormalArb } from './tslUti
 // drives MeshStandardNodeMaterial slots — colorNode / metalnessNode /
 // roughnessNode / normalNode / emissiveNode feed three's standard lighting (the
 // scene <Environment> supplies the IBL the original read from tEnvMap), and
-// outputNode reproduces the tail of main(): height tint, capital fog, depth
+// outputNode reproduces the tail of main(): height tint, meadow fog, depth
 // haze, transition wash and the chapter/transition alpha fades.
 //
 // Sampler → asset mapping:
-//   tMap         → the GLB CapitalForeground base map (seamless grass, uv0)
+//   tMap         → the GLB MeadowForeground base map (seamless grass, uv0)
 //   tEmissiveMap → the GLB prairie lightmap (baked light, uv1)
 //   tGrass       → grass_diffuse.webp (detail grass + bump source)
 //   tNoise       → noise.webp (uv jitter, lake warp, fog noise)
@@ -52,7 +52,7 @@ import { hueShift, adjustSaturation, dHdxyFwd, perturbNormalArb } from './tslUti
 // tNoiseNormal (declared but unused), tMouse (= 0; its normal-scale term
 // collapses to 1). tVoronoi only fed a `moss` color the reference computes but
 // never reads back (dead code), so both are dropped.
-export function useCapitalForegroundMaterial({ baseMap, lightMap }) {
+export function useMeadowForegroundMaterial({ baseMap, lightMap }) {
   const [grassTex, noiseTex] = useTexture([
     '/grass_diffuse.webp',
     '/noise.webp',
@@ -60,7 +60,7 @@ export function useCapitalForegroundMaterial({ baseMap, lightMap }) {
 
   return useMemo(
     () =>
-      createCapitalForegroundMaterial({
+      createMeadowForegroundMaterial({
         baseMap,
         lightMap,
         grassTex,
@@ -70,7 +70,7 @@ export function useCapitalForegroundMaterial({ baseMap, lightMap }) {
   )
 }
 
-export function createCapitalForegroundMaterial({
+export function createMeadowForegroundMaterial({
   baseMap,
   lightMap,
   grassTex,
@@ -89,9 +89,9 @@ export function createCapitalForegroundMaterial({
   const uTransitionColor = uniform(new Color('#5f9bc4'))
   const uLightColor = uniform(new Color('#e7f1f5')) // depth haze / sky tone
   const uDarkColor = uniform(new Color('#74aed8')) // high-altitude tint
-  const uCapitalFog = uniform(new Color('#aebdab')) // valley fog
+  const uMeadowFog = uniform(new Color('#aebdab')) // valley fog
   // Near fog near/far. The reference hardcodes 0.01 / 50 (its scene units);
-  // exposed here so Capital.jsx can match the camera and avoid over-fogging the
+  // exposed here so Meadow.jsx can match the camera and avoid over-fogging the
   // larger world scale.
   const uFogNear = uniform(0.01)
   const uFogFar = uniform(50)
@@ -166,30 +166,30 @@ export function createCapitalForegroundMaterial({
   /* --- post-lighting tail: `output` is the lit color (IBL + emissive) --- */
   let outgoing = output.rgb
 
-  const capitalNoise = texture(
+  const meadowNoise = texture(
     noiseTex,
     posW.zy.mul(vec2(1, 2)).add(t.mul(2)).mul(0.002),
   ).r.sub(0.5)
   outgoing = mix(
     outgoing,
     mix(uLightColor, uDarkColor, 0.7),
-    smoothstep(10, 40, posW.y.add(capitalNoise.mul(10))).mul(0.1),
+    smoothstep(10, 40, posW.y.add(meadowNoise.mul(10))).mul(0.1),
   )
 
-  let capitalFog = smoothstep(
+  let meadowFog = smoothstep(
     0.2,
     0.8,
     texture(noiseTex, posW.zy.mul(vec2(1, 3)).mul(0.001).sub(t.mul(0.001))).r,
   )
-  capitalFog = capitalFog.mul(smoothstep(0, -40, posW.y.add(capitalNoise.mul(40))))
-  capitalFog = capitalFog.mul(smoothstep(-200, -190, posW.x))
-  outgoing = mix(outgoing, uCapitalFog, capitalFog.mul(0.5))
+  meadowFog = meadowFog.mul(smoothstep(0, -40, posW.y.add(meadowNoise.mul(40))))
+  meadowFog = meadowFog.mul(smoothstep(-200, -190, posW.x))
+  outgoing = mix(outgoing, uMeadowFog, meadowFog.mul(0.5))
 
   outgoing = mix(outgoing, uLightColor, fogDepth)
   outgoing = mix(outgoing, uTransitionColor, smoothstep(0, 0.5, uTransition))
 
   /* --- alpha: fog lift + transition + chapter fade-out --- */
-  let alpha = a.add(capitalFog.mul(0.5))
+  let alpha = a.add(meadowFog.mul(0.5))
   alpha = alpha.mul(smoothstep(1, 0.9, uTransition))
   alpha = alpha.mul(smoothstep(2, 1.5, uChapter))
 
@@ -210,7 +210,7 @@ export function createCapitalForegroundMaterial({
   material.userData.uTransitionColor = uTransitionColor
   material.userData.uLightColor = uLightColor
   material.userData.uDarkColor = uDarkColor
-  material.userData.uCapitalFog = uCapitalFog
+  material.userData.uMeadowFog = uMeadowFog
   material.userData.uFogNear = uFogNear
   material.userData.uFogFar = uFogFar
 

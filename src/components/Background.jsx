@@ -6,7 +6,7 @@ import { useTransitionState } from '../state/TransitionContext'
 
 // The sky dome behind everything. Its look is UV-based (not view-direction
 // based), so we recenter it on the camera every frame — that guarantees the
-// dome always wraps the view (the marine camera otherwise drifts to its edge)
+// dome always wraps the view (the ocean camera otherwise drifts to its edge)
 // without changing the rendered pattern. Drawn first, depth-test off, so it can
 // never occlude the scene.
 export function Background(props) {
