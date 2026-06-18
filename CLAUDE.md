@@ -27,7 +27,7 @@ Renamed everywhere — code, comments, docs, **and the files/assets themselves**
   `capitalMGmountains`→`meadowMGmountains`, `Maritime0/1/2`→`Ocean0/1/2`, groups `Capital`→`Meadow`.
 - **Lightmap textures**: `capital-lightmap.webp`→`meadow-lightmap.webp`,
   `trading-lightmap.webp`→`night-lightmap.webp`, `maritime-lightmap.webp`→`ocean-lightmap.webp`,
-  `homepage-lightmap.webp`→`snow-lightmap.webp` (unused).
+  `homepage-lightmap.webp`→`snow-lightmap.webp`.
 - **Reference GLSL files**: `capital_foreground.glsl`→`meadow_foreground.glsl`,
   `trading_background.glsl`→`night_background.glsl`, `maritime_sea_rock.glsl`→`ocean_sea_rock.glsl`,
   `maritime_water.glsl`→`ocean_water.glsl`, `reflect_mountain_maritime.glsl`→`reflect_mountain_ocean.glsl`.
@@ -41,7 +41,7 @@ Each chapter's own assets live in a folder named after the chapter; shared asset
 
 ```
 public/
-  snow/   snow.glb, snow-lightmap.webp (unused)
+  snow/   snow.glb, snow-lightmap.webp
   night/  night-lightmap.webp
   meadow/ meadow-min.glb, meadow-lightmap.webp
   ocean/  ocean.glb, ocean-lightmap.webp

@@ -72,9 +72,9 @@ import {
 //   tEnvMap — PMREM env map; the scene's ambient + directional lights stand
 //             in for the original's IBL-only lighting
 // tArmMap (AO/lightmap) is the original's single swapped-per-chapter sampler;
-// here meadow and night read dedicated baked lightmaps
-// (meadow-lightmap.webp / night-lightmap.webp), while snow and ocean
-// fall back to the shader's vec4(1) default.
+// here every chapter reads a dedicated baked lightmap
+// (snow-lightmap.webp / night-lightmap.webp / meadow-lightmap.webp /
+// ocean-lightmap.webp).
 export function useMountainMaterial() {
   const [
     noiseTex,
@@ -84,6 +84,7 @@ export function useMountainMaterial() {
     diffuseTex,
     rockNormalTex,
     grassTex,
+    snowLightmapTex,
     meadowLightmapTex,
     nightLightmapTex,
     oceanLightmapTex,
@@ -95,6 +96,7 @@ export function useMountainMaterial() {
     '/rock_diffuse.webp',
     '/rock_normal.webp',
     '/grass_diffuse.webp',
+    '/snow/snow-lightmap.webp',
     '/meadow/meadow-lightmap.webp',
     '/night/night-lightmap.webp',
     '/ocean/ocean-lightmap.webp',
@@ -110,6 +112,7 @@ export function useMountainMaterial() {
         diffuseTex,
         rockNormalTex,
         grassTex,
+        snowLightmapTex,
         meadowLightmapTex,
         nightLightmapTex,
         oceanLightmapTex,
@@ -122,6 +125,7 @@ export function useMountainMaterial() {
       diffuseTex,
       rockNormalTex,
       grassTex,
+      snowLightmapTex,
       meadowLightmapTex,
       nightLightmapTex,
       oceanLightmapTex,
@@ -137,6 +141,7 @@ export function createMountainMaterial({
   diffuseTex,
   rockNormalTex,
   grassTex,
+  snowLightmapTex,
   meadowLightmapTex,
   nightLightmapTex,
   oceanLightmapTex,
@@ -149,6 +154,7 @@ export function createMountainMaterial({
     diffuseTex,
     rockNormalTex,
     grassTex,
+    snowLightmapTex,
     meadowLightmapTex,
     nightLightmapTex,
     oceanLightmapTex,
@@ -377,13 +383,14 @@ export function createMountainMaterial({
   base = mix(base, oceanSample, ocean)
   let diffuseRgb = uColor.mul(base.rgb)
 
-  /* ARM lightmap chain — meadow, night & ocean sample their baked
-     lightmap textures (the original's tArmMap), with the flipped-Y UV + noise
-     jitter of the reference shader. Snow keeps the vec4(1) fallback. */
+  /* ARM lightmap chain — every chapter samples its baked lightmap texture
+     (the original's tArmMap), with the flipped-Y UV + noise jitter of the
+     reference shader. */
   const armUv = vec2(st.x, st.y.oneMinus()).add(
     texture(noiseTex, st.mul(80)).rg.sub(0.5).mul(0.005),
   )
   let armSample0 = vec4(1)
+  armSample0 = mix(armSample0, texture(snowLightmapTex, armUv), snow)
   armSample0 = mix(armSample0, texture(meadowLightmapTex, armUv), meadow)
   armSample0 = mix(armSample0, texture(nightLightmapTex, armUv), night)
   armSample0 = mix(armSample0, texture(oceanLightmapTex, armUv), ocean)
