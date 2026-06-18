@@ -10,7 +10,8 @@ function App() {
   return (
     <Canvas
       shadows
-      camera={{ fov: 55, position: [175.856, 45.821, -51.137], far: 5000 }}
+      dpr={[1, 1.5]}
+      camera={{ fov: 55, position: [175.856, 45.821, -51.137], far: 2000 }}
       gl={(props) => {
         extend(THREE)
         const renderer = new WebGPURenderer({
@@ -20,7 +21,7 @@ function App() {
           alpha: false,
           stencil: false,
           shadowMap: true,
-          forceWebGL: true,
+          // forceWebGL: true,
         })
         return renderer.init().then(() => renderer)
       }}
