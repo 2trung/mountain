@@ -47,8 +47,8 @@ export function Mountain(props) {
     u.uMixOffset.value.set(maps.mix.offset[0], maps.mix.offset[1])
     u.uMixRot.value = maps.mix.rotation
 
-    // Clouds belong to the homepage only; wipe them (guillotine fires past
-    // uChapter 2.2) as soon as we leave home, and fade them during the switch
+    // Clouds belong to the snow scene only; wipe them (guillotine fires past
+    // uChapter 2.2) as soon as we leave it, and fade them during the switch
     // via uTransition.
     const cloudChapter = progress.page >= 1 ? 3 : 0
     for (const m of [foregroundMaterial, middlegroundMaterial]) {

@@ -91,7 +91,7 @@ export function createCapitalForegroundMaterial({
   const uDarkColor = uniform(new Color('#74aed8')) // high-altitude tint
   const uCapitalFog = uniform(new Color('#aebdab')) // valley fog
   // Near fog near/far. The reference hardcodes 0.01 / 50 (its scene units);
-  // exposed here so Capital.jsx can match the camera and avoid over-fogging the
+  // exposed here so Meadow.jsx can match the camera and avoid over-fogging the
   // larger world scale.
   const uFogNear = uniform(0.01)
   const uFogFar = uniform(50)

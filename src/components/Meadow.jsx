@@ -7,7 +7,7 @@ import { useCapitalForegroundMaterial } from '../materials/useCapitalForegroundM
 import { useLakeMaterial } from '../materials/useLakeMaterial'
 import { clamp01, smoothstep } from '../utils/math'
 
-export function Capital(props) {
+export function Meadow(props) {
   const { nodes, materials } = useGLTF('/capital-min.glb')
   const ref = useChapterVisible(2)
   const progress = useTransitionState()

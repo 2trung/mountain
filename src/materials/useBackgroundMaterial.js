@@ -35,9 +35,9 @@ import {
 
 // Full TSL port of background.glsl (material "Sky") — the dome behind the
 // mountain. Recreated 1:1 from the reference fragment shader: vertical sky
-// gradient, drifting cloud bands, trading "data" lines, the fort-energy
-// starfield, the who-we-are / homepage sea & globe chapter washes, and the
-// transition cloud wash. GLSL branches (if fortEnergy / if homepage) are kept
+// gradient, drifting cloud bands, night "data" lines, the fort-energy
+// starfield, the who-we-are / snow sea & globe chapter washes, and the
+// transition cloud wash. GLSL branches (if fortEnergy / if snow) are kept
 // as branchless mask multiplies, which is equivalent and friendlier to the
 // node graph.
 //
@@ -85,8 +85,8 @@ export function createBackgroundMaterial({ noiseTex }) {
 
     // --- page masks (branchless chapter select) ---
     const whoWeAre = step(-0.5, uPage).oneMinus()
-    const homepage = step(-0.5, uPage).mul(step(0.5, uPage).oneMinus())
-    const trading = step(0.5, uPage).mul(step(1.5, uPage).oneMinus())
+    const snow = step(-0.5, uPage).mul(step(0.5, uPage).oneMinus())
+    const night = step(0.5, uPage).mul(step(1.5, uPage).oneMinus())
     const fortEnergy = step(3.5, uPage).mul(step(4.5, uPage).oneMinus())
 
     // --- base sky value: soft radial darkening * height + a slow cloud lift ---
@@ -102,14 +102,14 @@ export function createBackgroundMaterial({ noiseTex }) {
       .sub(length(dsUv.sub(0.5)).mul(sUv.y))
       .add(simpleClouds.mul(0.5))
 
-    // --- trading: focus the sky into a dithered lower-left glow ---
+    // --- night: focus the sky into a dithered lower-left glow ---
     const ditheredUv = vUv.add(rand(fragCoord).sub(0.5).mul(0.002))
     const ditheredValue = smoothstep(
-      float(0.2).sub(trading.mul(0.08)),
+      float(0.2).sub(night.mul(0.08)),
       0,
       length(ditheredUv.sub(vec2(0.34, 0.2))),
     )
-    value = mix(value, ditheredValue, trading)
+    value = mix(value, ditheredValue, night)
 
     // --- fort energy: bottom-up glow + soft cloud band ---
     let energyValue = smoothstep(
@@ -138,14 +138,14 @@ export function createBackgroundMaterial({ noiseTex }) {
     energyValue = min(energyValue, 1)
     value = mix(value, energyValue, fortEnergy)
 
-    // --- sky gradient (homepage lifts the horizon a touch brighter) ---
+    // --- sky gradient (snow lifts the horizon a touch brighter) ---
     let color = mix(
       uDarkColor,
-      uLightColor.add(homepage.mul(0.08)),
+      uLightColor.add(snow.mul(0.08)),
       clamp(value, 0, 1),
     )
 
-    // --- trading "data" lines (added later, after stars) ---
+    // --- night "data" lines (added later, after stars) ---
     let lines = texture(
       noiseTex,
       vUv.mul(vec2(8, 0.1)).add(vec2(0, t.mul(0.01))),
@@ -179,7 +179,7 @@ export function createBackgroundMaterial({ noiseTex }) {
     color = color.add(stars.mul(uLightColor.add(0.4)).mul(fortEnergy))
     color = mix(color, vec3(0), smoothstep(0.5, 1, uChapter).mul(fortEnergy))
 
-    // --- trading lines blended in over the sky ---
+    // --- night lines blended in over the sky ---
     // Reference tints these "data lines" with vec3(0.3, 0.7, 0.5), but that
     // reads as a glowing green-noise blob where the sky peeks through the
     // ridge notch. Use the sky tone itself so the lines stay subtle (no green).
@@ -187,13 +187,13 @@ export function createBackgroundMaterial({ noiseTex }) {
       lines
         .mul(uLightColor)
         .mul(vec3(0.3, 0.7, 0.5))
-        .mul(trading),
+        .mul(night),
     )
 
     const transition = smoothstep(0, 0.2, uTransition)
     color = mix(color, uTransitionColor, transition)
 
-    // --- procedural cloud rows (homepage sky + transition wash) ---
+    // --- procedural cloud rows (snow sky + transition wash) ---
     const count = float(4)
     const fUv = uvB.add(vec2(t.mul(0.005), 0)).add(mouse.mul(0.01))
     // Only cUv.y is read downstream, so we track it as a scalar.
@@ -241,28 +241,28 @@ export function createBackgroundMaterial({ noiseTex }) {
     color = mix(
       color,
       cloudySkyColor,
-      clamp(homepage.mul(0.3).add(transition), 0, 1).mul(0.5),
+      clamp(snow.mul(0.3).add(transition), 0, 1).mul(0.5),
     )
     color = mix(color, cloudySkyColor, whoWeAre)
 
-    // --- homepage chapter washes: sea -> globe sky -> deep teal ---
+    // --- snow chapter washes: sea -> globe sky -> deep teal ---
     const seaColor = vec3(0.31, 0.373, 0.427)
     const globeSky = vec3(0.0196, 0.0745, 0.1098)
     color = mix(
       color,
       seaColor,
       smoothstep(2.5, 2.7, uChapter.add(dUv.y).add(noise.mul(0.1))).mul(
-        homepage,
+        snow,
       ),
     )
-    color = mix(color, globeSky, smoothstep(4, 4.1, uChapter).mul(homepage))
+    color = mix(color, globeSky, smoothstep(4, 4.1, uChapter).mul(snow))
     color = mix(
       color,
       vec3(0.11, 0.22, 0.26),
-      smoothstep(4.2, 4.3, uChapter).mul(homepage),
+      smoothstep(4.2, 4.3, uChapter).mul(snow),
     )
-    // trading (else-if): darken toward black as its chapter advances.
-    color = color.mul(mix(float(1), float(1).sub(min(uChapter, 1)), trading))
+    // night (else-if): darken toward black as its chapter advances.
+    color = color.mul(mix(float(1), float(1).sub(min(uChapter, 1)), night))
 
     return vec4(color, 1)
   })

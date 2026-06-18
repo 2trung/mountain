@@ -2,8 +2,8 @@ import { useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useTransitionState } from '../state/TransitionContext'
 
-// Scene lighting driven by the active chapter's mood: dim warm night for
-// trading, bright sun for capital, soft overcast for marine. Also scales the
+// Scene lighting driven by the active chapter's mood: dim warm light for
+// night, bright sun for meadow, soft overcast for ocean. Also scales the
 // environment-map intensity so the IBL matches.
 export function Lighting() {
   const progress = useTransitionState()

@@ -7,12 +7,12 @@ import { useTransitionState } from '../state/TransitionContext'
 import { useChapterVisible } from '../state/useChapterVisible'
 import { smoothstep } from '../utils/math'
 
-// Marine chapter props (imported via gltfjsx structure) from maritime.glb: the
+// Ocean chapter props (imported via gltfjsx structure) from maritime.glb: the
 // big Sea plane (animated water shader) and the instanced sea rocks, which carry
 // their world placement in their instanceMatrix. (The baked DiffuseCloud
 // instances rendered as flat slabs and are dropped; the sky dome supplies the
 // overcast cloud cover instead.)
-export function Maritime(props) {
+export function Ocean(props) {
   const { nodes, materials } = useGLTF('/maritime.glb')
   // The Sea material's baked map is the GLSL `tMap` (the "waves" shoreline mask).
   const water = useWaterMaterial(materials.Sea.map)

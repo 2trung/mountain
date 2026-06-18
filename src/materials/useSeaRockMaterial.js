@@ -30,7 +30,7 @@ import {
 import { perturbNormalArb, dHdxyFwd, tangentTransform } from './tslUtils'
 
 // TSL port of the reference GLSL sea-rock shader (maritime_sea_rock.glsl) — the
-// instanced rocks ringing the maritime island. It's a STANDARD (IBL-lit) PBR
+// instanced rocks ringing the ocean island. It's a STANDARD (IBL-lit) PBR
 // material like the mountain, so it uses MeshStandardNodeMaterial slots
 // (colorNode / normalNode / roughnessNode / metalnessNode) and post-processes
 // the lit color in outputNode (emissive foam, distance fog, transition fade).

@@ -5,9 +5,9 @@ import { usePeakMaterial } from '../materials/usePeakMaterial'
 import { useTransitionState } from '../state/TransitionContext'
 import { smoothstep } from '../utils/math'
 
-// The floating backdrop peaks that frame the homepage. They only belong to the
-// home chapter, so they fade out (via the same uTransition the peak shader uses)
-// both during a switch and whenever the active page leaves home.
+// The floating backdrop peaks that frame the snow scene. They only belong to the
+// snow chapter, so they fade out (via the same uTransition the peak shader uses)
+// both during a switch and whenever the active page leaves it.
 export function Peaks(props) {
   const { nodes, materials } = useGLTF('/Homepage.glb')
   const peaksMaterial = usePeakMaterial(materials.HomepagePeaks)
@@ -21,12 +21,12 @@ export function Peaks(props) {
   }, [peaksMaterial])
 
   useFrame(() => {
-    // 0 on home, 1 once we move off it; combined with the live wave value so the
+    // 0 on snow, 1 once we move off it; combined with the live wave value so the
     // peaks dissolve with the transition and stay gone for the other chapters.
-    const awayFromHome = smoothstep(0, 0.5, progress.page)
+    const awayFromSnow = smoothstep(0, 0.5, progress.page)
     peaksMaterial.userData.uTransition.value = Math.max(
       progress.transition,
-      awayFromHome,
+      awayFromSnow,
     )
   })
 

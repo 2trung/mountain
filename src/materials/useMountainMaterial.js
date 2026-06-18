@@ -50,7 +50,7 @@ import {
 // Instead of re-implementing the hand-written PBR pipeline of the original,
 // this uses MeshStandardNodeMaterial slots: colorNode / normalNode /
 // roughnessNode / metalnessNode feed three's standard lighting, and
-// outputNode post-processes the lit color (capital grading, transition
+// outputNode post-processes the lit color (meadow grading, transition
 // desaturation, emissive wave, distance fog, alpha) exactly like the tail of
 // the GLSL main().
 //
@@ -61,19 +61,19 @@ import {
 //   tPerlin     → perlinNoise.webp
 //   tVoronoi    → voronoi.webp
 //   tMixMap     → snowRockMix.webp (snow/rock blend mask)
-//   tMap2       → rock_diffuse.webp (detail/second diffuse; capital and
-//                 maritime swap in grass_diffuse.webp)
-//   tMap        → rock_diffuse.webp (only sampled when uPage > 2.5: maritime &
-//                 fortEnergy — the maritime coast's bare-rock layer)
+//   tMap2       → rock_diffuse.webp (detail/second diffuse; meadow and
+//                 ocean swap in grass_diffuse.webp)
+//   tMap        → rock_diffuse.webp (only sampled when uPage > 2.5: ocean &
+//                 fortEnergy — the ocean coast's bare-rock layer)
 //   tRockNormal → rock_normal.webp
 // Omitted (no asset / no equivalent):
 //   tMouse  — mouse trail FBO; with mouse = 0 every term it feeds cancels,
-//             so the trading wireframe grid is dropped too
+//             so the night wireframe grid is dropped too
 //   tEnvMap — PMREM env map; the scene's ambient + directional lights stand
 //             in for the original's IBL-only lighting
 // tArmMap (AO/lightmap) is the original's single swapped-per-chapter sampler;
-// here capital and trading read dedicated baked lightmaps
-// (capital-lightmap.webp / trading-lightmap.webp), while homepage and maritime
+// here meadow and night read dedicated baked lightmaps
+// (capital-lightmap.webp / trading-lightmap.webp), while snow and ocean
 // fall back to the shader's vec4(1) default.
 export function useMountainMaterial() {
   const [
@@ -84,9 +84,9 @@ export function useMountainMaterial() {
     diffuseTex,
     rockNormalTex,
     grassTex,
-    capitalLightmapTex,
-    tradingLightmapTex,
-    maritimeLightmapTex,
+    meadowLightmapTex,
+    nightLightmapTex,
+    oceanLightmapTex,
   ] = useTexture([
     '/noise.webp',
     '/perlinNoise.webp',
@@ -110,9 +110,9 @@ export function useMountainMaterial() {
         diffuseTex,
         rockNormalTex,
         grassTex,
-        capitalLightmapTex,
-        tradingLightmapTex,
-        maritimeLightmapTex,
+        meadowLightmapTex,
+        nightLightmapTex,
+        oceanLightmapTex,
       }),
     [
       noiseTex,
@@ -122,9 +122,9 @@ export function useMountainMaterial() {
       diffuseTex,
       rockNormalTex,
       grassTex,
-      capitalLightmapTex,
-      tradingLightmapTex,
-      maritimeLightmapTex,
+      meadowLightmapTex,
+      nightLightmapTex,
+      oceanLightmapTex,
     ],
   )
 }
@@ -137,9 +137,9 @@ export function createMountainMaterial({
   diffuseTex,
   rockNormalTex,
   grassTex,
-  capitalLightmapTex,
-  tradingLightmapTex,
-  maritimeLightmapTex,
+  meadowLightmapTex,
+  nightLightmapTex,
+  oceanLightmapTex,
 }) {
   for (const t of [
     noiseTex,
@@ -149,9 +149,9 @@ export function createMountainMaterial({
     diffuseTex,
     rockNormalTex,
     grassTex,
-    capitalLightmapTex,
-    tradingLightmapTex,
-    maritimeLightmapTex,
+    meadowLightmapTex,
+    nightLightmapTex,
+    oceanLightmapTex,
   ]) {
     t.wrapS = t.wrapT = RepeatWrapping
   }
@@ -170,8 +170,8 @@ export function createMountainMaterial({
   const uFogNear = uniform(0.1)
   const uFogFar = uniform(5000)
   const uLightColor = uniform(new Color('#949fa8')) // distance-fog / sky
-  const uDarkColor = uniform(new Color('#1e2630')) // capital high-altitude tint
-  const uCapitalFog = uniform(new Color('#aebdab')) // capital valley fog
+  const uDarkColor = uniform(new Color('#1e2630')) // meadow high-altitude tint
+  const uMeadowFog = uniform(new Color('#aebdab')) // meadow valley fog
 
   /* Per-chapter texture UV transforms (reference mapTransform* fields). map ->
      primary diffuse, map2 -> second diffuse / grass, mix -> snow-rock mask. */
@@ -197,22 +197,22 @@ export function createMountainMaterial({
   const t = time // uTime
 
   /* Chapter masks — exactly one is 1 */
-  const homepage = step(0.5, uPage).oneMinus()
-  const trading = step(0.5, uPage).mul(step(1.5, uPage).oneMinus())
-  const capital = step(1.5, uPage).mul(step(2.5, uPage).oneMinus())
-  const maritime = step(2.5, uPage).mul(step(3.5, uPage).oneMinus())
+  const snow = step(0.5, uPage).oneMinus()
+  const night = step(0.5, uPage).mul(step(1.5, uPage).oneMinus())
+  const meadow = step(1.5, uPage).mul(step(2.5, uPage).oneMinus())
+  const ocean = step(2.5, uPage).mul(step(3.5, uPage).oneMinus())
   const fortEnergy = step(3.5, uPage)
-  const pageHigh = step(2.5, uPage) // maritime + fortEnergy
+  const pageHigh = step(2.5, uPage) // ocean + fortEnergy
 
   const transition = uTransition
   const transDir = uTransitionDirection
   const transitionSize = float(0.03)
-    .sub(capital.mul(0.01))
-    .sub(trading.mul(0.01))
+    .sub(meadow.mul(0.01))
+    .sub(night.mul(0.01))
     .mul(2)
 
   /* Grain + transition wave sweeping along the mountain's height */
-  const pixelScale = capital.add(trading.mul(2)).add(homepage)
+  const pixelScale = meadow.add(night.mul(2)).add(snow)
   const pixelNoise = texture(noiseTex, st.mul(pixelScale.add(2)))
     .r.mul(
       texture(noiseTex, st.mul(pixelScale.add(3)).add(t.mul(0.01).add(0.5))).r,
@@ -272,31 +272,31 @@ export function createMountainMaterial({
   )
   const second0 = texture(diffuseTex, map2Uv)
   const secondSample = vec4(
-    mix(second0.rgb, mix(vec3(0.36, 0.47, 0.52), vec3(1), second0.r), homepage),
+    mix(second0.rgb, mix(vec3(0.36, 0.47, 0.52), vec3(1), second0.r), snow),
     second0.a,
   )
   const mixMapSample = texture(mixTex, mixUv.add(smallNoise.mul(0.002)))
 
-  /* HOMEPAGE & TRADING */
-  const hoTraSample = mix(secondSample.mul(1.3), baseSample, mixMapSample.r)
+  /* SNOW & NIGHT */
+  const snowNightSample = mix(secondSample.mul(1.3), baseSample, mixMapSample.r)
 
-  /* CAPITAL — grass, moss, flowers, valley shading.
-     Capital swaps the "second" diffuse (tMap2) for the grass diffuse. */
+  /* MEADOW — grass, moss, flowers, valley shading.
+     Meadow swaps the "second" diffuse (tMap2) for the grass diffuse. */
   const grassSample = texture(grassTex, map2Uv)
-  let capitalSample = mix(grassSample.mul(0.6), baseSample, mixMapSample.r)
-  let capRgb = hueShift(
-    capitalSample.rgb,
+  let meadowSample = mix(grassSample.mul(0.6), baseSample, mixMapSample.r)
+  let meadowRgb = hueShift(
+    meadowSample.rgb,
     texture(noiseTex, st.mul(2.2)).r.sub(0.5).mul(1.8).add(0.2),
   )
-  capRgb = capRgb.mul(
+  meadowRgb = meadowRgb.mul(
     smoothstep(0.4, 0.6, texture(noiseTex, st.mul(2.9)).r)
       .mul(0.3)
       .add(1),
   )
   const lilGrass = texture(grassTex, st.mul(8)).rgb
   const lilFactor = smoothstep(0.7, 1, texture(perlinTex, st.mul(5)).r)
-  capitalSample = vec4(mix(capRgb, lilGrass, lilFactor), capitalSample.a)
-  let moss = capitalSample.mul(0.6)
+  meadowSample = vec4(mix(meadowRgb, lilGrass, lilFactor), meadowSample.a)
+  let moss = meadowSample.mul(0.6)
   const flowers = vec4(hueShift(vec3(1, 0.21, 0.05), bigNoise.r.mul(-5)), 1)
   moss = mix(
     moss,
@@ -307,39 +307,39 @@ export function createMountainMaterial({
   )
   const heightLine = posL.y.add(posL.z.mul(0.1)).add(bigNoise.r.mul(10))
   const mossZone = mixMapSample.r.add(smoothstep(-10, -25, heightLine))
-  capitalSample = mix(capitalSample, moss, clamp(mossZone, 0, 1))
+  meadowSample = mix(meadowSample, moss, clamp(mossZone, 0, 1))
   const bottom = smoothstep(-18, -35, heightLine)
-  capitalSample = vec4(
-    hueShift(capitalSample.rgb, bottom.mul(-0.5)),
-    capitalSample.a,
+  meadowSample = vec4(
+    hueShift(meadowSample.rgb, bottom.mul(-0.5)),
+    meadowSample.a,
   ).mul(bottom.mul(0.8).oneMinus())
-  capRgb = capitalSample.rgb.mul(
+  meadowRgb = meadowSample.rgb.mul(
     texture(noiseTex, st.mul(vec2(16, 1)))
       .r.mul(smoothstep(0.3, 0.5, texture(noiseTex, st.mul(2)).r))
       .mul(0.8)
       .add(0.5),
   )
-  capitalSample = vec4(adjustSaturation(capRgb, 1.1), capitalSample.a)
+  meadowSample = vec4(adjustSaturation(meadowRgb, 1.1), meadowSample.a)
 
-  /* MARITIME — coast shading + animated splashes.
+  /* OCEAN — coast shading + animated splashes.
      tMap = rock_diffuse (baseSample), tMap2 = grass_diffuse (grassSample), so
      the coast blends bare rock with the grass diffuse like the reference. */
-  const mixMaritime = smoothstep(-0.5, 0.8, geoNormal.x)
-  let maritimeSample = mix(
+  const mixOcean = smoothstep(-0.5, 0.8, geoNormal.x)
+  let oceanSample = mix(
     vec4(adjustSaturation(baseSample.rgb, 2), 1),
     grassSample.mul(vec4(0.8, 0.7, 0.8, 1)),
-    mixMaritime,
+    mixOcean,
   )
   // Darken the lower island toward the waterline so the wide base apron reads
   // as wet rock/shore instead of bright snow (range widened from the original
   // -22..-15 to span the visible base above the raised sea).
-  maritimeSample = vec4(
-    maritimeSample.rgb.mul(
+  oceanSample = vec4(
+    oceanSample.rgb.mul(
       smoothstep(0, 38, posL.y.add(smallNoise.x.mul(5)))
         .mul(0.9)
         .add(0.1),
     ),
-    maritimeSample.a,
+    oceanSample.a,
   )
   const splasher = posL.z.add(posL.x)
   const splash = smoothstep(
@@ -349,7 +349,7 @@ export function createMountainMaterial({
       .mul(sin(splasher.add(t.mul(0.1))))
       .mul(smoothstep(-1, 1, sin(splasher.mul(0.3).add(t.mul(2))))),
   )
-  maritimeSample = maritimeSample.add(
+  oceanSample = oceanSample.add(
     smoothstep(
       splash.mul(1.5).add(-22.9),
       splash.mul(0.8).add(-23.8),
@@ -366,73 +366,73 @@ export function createMountainMaterial({
     -23.8,
     posL.y.add(texture(noiseTex, st.mul(2).sub(t.mul(0.005))).r.mul(10)),
   )
-  const maritimeEmissive = foamFog
+  const oceanEmissive = foamFog
     .mul(0.3)
     .add(smoothstep(0.5, 0.1, splashZone).mul(transitionWave.oneMinus()))
-    .mul(maritime)
+    .mul(ocean)
 
   /* Blend chapters into the diffuse color */
-  let base = mix(baseSample, hoTraSample, homepage.add(trading))
-  base = mix(base, capitalSample, capital)
-  base = mix(base, maritimeSample, maritime)
+  let base = mix(baseSample, snowNightSample, snow.add(night))
+  base = mix(base, meadowSample, meadow)
+  base = mix(base, oceanSample, ocean)
   let diffuseRgb = uColor.mul(base.rgb)
 
-  /* ARM lightmap chain — capital, trading & maritime sample their baked
+  /* ARM lightmap chain — meadow, night & ocean sample their baked
      lightmap textures (the original's tArmMap), with the flipped-Y UV + noise
-     jitter of the reference shader. Homepage keeps the vec4(1) fallback. */
+     jitter of the reference shader. Snow keeps the vec4(1) fallback. */
   const armUv = vec2(st.x, st.y.oneMinus()).add(
     texture(noiseTex, st.mul(80)).rg.sub(0.5).mul(0.005),
   )
   let armSample0 = vec4(1)
-  armSample0 = mix(armSample0, texture(capitalLightmapTex, armUv), capital)
-  armSample0 = mix(armSample0, texture(tradingLightmapTex, armUv), trading)
-  armSample0 = mix(armSample0, texture(maritimeLightmapTex, armUv), maritime)
-  const capitalLightmap = mix(
+  armSample0 = mix(armSample0, texture(meadowLightmapTex, armUv), meadow)
+  armSample0 = mix(armSample0, texture(nightLightmapTex, armUv), night)
+  armSample0 = mix(armSample0, texture(oceanLightmapTex, armUv), ocean)
+  const meadowLightmap = mix(
     vec3(0.2, 0.2, 0.1),
     vec3(0.97, 0.8, 0.5),
     armSample0.r,
-  ).mul(smoothstep(0.6, 1, armSample0.rgb).mul(2.8).mul(capital).add(1))
-  let armSample = armSample0.mul(float(3).sub(maritime.mul(2)))
+  ).mul(smoothstep(0.6, 1, armSample0.rgb).mul(2.8).mul(meadow).add(1))
+  let armSample = armSample0.mul(float(3).sub(ocean.mul(2)))
   armSample = armSample.add(
-    smoothstep(0.2, 0.7, armSample).mul(maritime.mul(2.5).add(0.3)),
+    smoothstep(0.2, 0.7, armSample).mul(ocean.mul(2.5).add(0.3)),
   )
-  const homepageLightmap = mix(
+  const snowLightmap = mix(
     vec3(0.36, 0.47, 0.52),
     vec3(1),
     smoothstep(0.2, 0.9, armSample.r),
   )
-  const tradingLight = mix(
+  const nightLight = mix(
     vec3(1, 0.5, 0.2),
     vec3(0.35, 0.34, 0.5),
     smoothstep(40, 20, posL.y),
   )
-  const tradingLightmap = adjustSaturation(
+  const nightLightmap = adjustSaturation(
     armSample.rgb.mul(
       mix(
         vec3(0.1, 0.18, 0.25).mul(0.5),
-        tradingLight,
+        nightLight,
         smoothstep(0.2, 1.1, armSample.r),
       ),
     ),
     0.7,
   )
-  let armRgb = mix(armSample.rgb, homepageLightmap, homepage)
-  armRgb = mix(armRgb, capitalLightmap, capital)
-  armRgb = mix(armRgb, tradingLightmap, trading)
+  let armRgb = mix(armSample.rgb, snowLightmap, snow)
+  armRgb = mix(armRgb, meadowLightmap, meadow)
+  armRgb = mix(armRgb, nightLightmap, night)
 
   /* Specular occlusion (reference lines 537-539). The scene is IBL-only, so the
-     env map is the sole specular source; without this the maritime coast keeps
+     env map is the sole specular source; without this the ocean coast keeps
      bright env reflections in its crevices and a grazing Fresnel rim and reads
      "shiny". aoNode drives MeshStandardNodeMaterial's computeSpecularOcclusion
      (the same function the GLSL calls) and also AOs the indirect diffuse.
      occlusion = mix(armRgb.r, 1, transitionWave): armRgb.r is the post-remap
      lightmap red (the GLSL `armSample.r`); in lit areas it's boosted >1 so the
      clamp lands on 1 (no diffuse change, full specular), only crevices occlude.
-     Gated to maritime so the other three chapters stay unchanged (ao = 1). */
+     Gated to ocean so the other three chapters stay unchanged (ao = 1). */
   const occlusion = mix(
     float(1),
     clamp(mix(armRgb.r, float(1), transitionWave), 0, 1),
-    maritime,
+    ocean,
   )
 
   /* Normals — rock detail + chapter-specific bump layers */
@@ -444,16 +444,16 @@ export function createMountainMaterial({
   const nTexRaw = texture(rockNormalTex, st.mul(30)).rgb.mul(2).sub(1)
   const nTexScale = mix(
     float(2)
-      .add(trading.mul(4))
-      .mul(mixMapSample.r.mul(homepage.add(trading)).oneMinus()),
-    0.3, // capital factor; original adds .4 * mouse (omitted)
-    capital,
+      .add(night.mul(4))
+      .mul(mixMapSample.r.mul(snow.add(night)).oneMinus()),
+    0.3, // meadow factor; original adds .4 * mouse (omitted)
+    meadow,
   )
   const nTex = vec3(nTexRaw.xy.mul(nTexScale), nTexRaw.z)
   const rockNormal = normalize(tangentTransform(viewPos, geoNormal, st, nTex))
 
-  /* Windy snow (homepage + trading) */
-  const windUv = rotateUv(st, vec2(1, 7), trading.mul(0.3).add(2.7)).mul(
+  /* Windy snow (snow + night) */
+  const windUv = rotateUv(st, vec2(1, 7), night.mul(0.3).add(2.7)).mul(
     vec2(1, 7),
   )
   const snowCloud = texture(
@@ -467,7 +467,7 @@ export function createMountainMaterial({
     1,
     texture(perlinTex, windUv.add(vec2(t.mul(0.03), 0))).rgb,
   )
-    .mul(mix(float(1), mixMapSample.r, trading))
+    .mul(mix(float(1), mixMapSample.r, night))
     .mul(smoothstep(0.45, 1, snowCloud))
   diffuseRgb = diffuseRgb.add(
     windySnow
@@ -493,7 +493,7 @@ export function createMountainMaterial({
         mixMapSample.r.oneMinus().mul(9),
       ),
     ),
-    trading,
+    night,
   )
   // uPage >= 1.5 branch
   const pHighBase = perturbNormalArb(
@@ -502,15 +502,15 @@ export function createMountainMaterial({
     dHdxyFwd(
       diffuseTex,
       st.mul(15),
-      capital.mul(mixMapSample.r).oneMinus().mul(3.5),
+      meadow.mul(mixMapSample.r).oneMinus().mul(3.5),
     ),
   )
   const pHigh = mix(
     pHighBase,
     perturbNormalArb(viewPos, pHighBase, dHdxyFwd(perlinTex, st, 20)),
-    maritime,
+    ocean,
   )
-  const perturbedNormal = mix(pHigh, pLow, homepage.add(trading))
+  const perturbedNormal = mix(pHigh, pLow, snow.add(night))
   const finalNormal = mix(perturbedNormal, transitionNormal, transitionWave)
 
   diffuseRgb = diffuseRgb.mul(armRgb)
@@ -550,36 +550,36 @@ export function createMountainMaterial({
         1,
       ),
     )
-  const totalEmissive = vec3(maritimeEmissive).add(waveEmissive)
+  const totalEmissive = vec3(oceanEmissive).add(waveEmissive)
 
   /* Post-lighting: `output` holds the lit color from the standard pipeline */
   let outgoing = output.rgb
 
-  // Capital color correction (mask-gated, like the original's if-block)
-  const capitalNoise = texture(
+  // Meadow color correction (mask-gated, like the original's if-block)
+  const meadowNoise = texture(
     noiseTex,
     posW.zy.mul(vec2(1, 2)).add(t.mul(2)).mul(0.002),
   ).r.sub(0.5)
-  let capitalOLight = mix(
+  let meadowOLight = mix(
     outgoing,
     mix(uLightColor, uDarkColor, 0.7),
-    smoothstep(10, 40, posW.y.add(capitalNoise.mul(10))).mul(0.1),
+    smoothstep(10, 40, posW.y.add(meadowNoise.mul(10))).mul(0.1),
   )
-  const capitalFog = smoothstep(
+  const meadowFog = smoothstep(
     0.2,
     0.8,
     texture(noiseTex, posW.zy.mul(vec2(1, 3)).mul(0.001).sub(t.mul(0.001))).r,
-  ).mul(smoothstep(0, -40, posW.y.add(capitalNoise.mul(40))))
-  capitalOLight = mix(
-    capitalOLight,
+  ).mul(smoothstep(0, -40, posW.y.add(meadowNoise.mul(40))))
+  meadowOLight = mix(
+    meadowOLight,
     vec3(0.25, 0.3, 0.03).mul(0.1),
     smoothstep(0.1, 0, length(st.sub(vec2(0.03, 0.65)))).mul(0.7),
   )
-  capitalOLight = mix(capitalOLight, uCapitalFog, capitalFog.mul(0.5))
+  meadowOLight = mix(meadowOLight, uMeadowFog, meadowFog.mul(0.5))
   outgoing = mix(
     outgoing,
-    mix(capitalOLight, outgoing, transitionWave),
-    capital,
+    mix(meadowOLight, outgoing, transitionWave),
+    meadow,
   )
 
   // Desaturate while the wave passes, then add emissive
@@ -596,12 +596,12 @@ export function createMountainMaterial({
   ).mul(transition.oneMinus())
   outgoing = mix(outgoing, uLightColor, fogDepth)
 
-  const tradingFog = smoothstep(15, -20, posL.y).mul(0.2).mul(trading)
-  outgoing = mix(outgoing, vec3(0, 0.4, 0.9), tradingFog.mul(0.2))
+  const nightFog = smoothstep(15, -20, posL.y).mul(0.2).mul(night)
+  outgoing = mix(outgoing, vec3(0, 0.4, 0.9), nightFog.mul(0.2))
 
-  // (Trading mouse wireframe grid omitted — needs the tMouse trail FBO)
-  const strictTrading = max(0, trading.sub(transition))
-  outgoing = outgoing.mul(strictTrading.mul(min(1, uChapter)).oneMinus())
+  // (Night mouse wireframe grid omitted — needs the tMouse trail FBO)
+  const strictNight = max(0, night.sub(transition))
+  outgoing = outgoing.mul(strictNight.mul(min(1, uChapter)).oneMinus())
 
   /* Alpha — fortEnergy backside/edge fades + chapter fade-out */
   let alpha = mix(
@@ -638,7 +638,7 @@ export function createMountainMaterial({
   material.userData.uFogFar = uFogFar
   material.userData.uLightColor = uLightColor
   material.userData.uDarkColor = uDarkColor
-  material.userData.uCapitalFog = uCapitalFog
+  material.userData.uMeadowFog = uMeadowFog
   material.userData.uMapRepeat = uMapRepeat
   material.userData.uMapOffset = uMapOffset
   material.userData.uMapRot = uMapRot
