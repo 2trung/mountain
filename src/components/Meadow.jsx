@@ -45,7 +45,7 @@ export function Meadow(props) {
 
   return (
     <group ref={ref} {...props} dispose={null}>
-      <group name='MONTFORT'>
+      <group name='MOUNTAIN'>
         <group name='Meadow' position={[-69.803, 6.596, 0.499]}>
           <mesh
             name='meadow-prairie'

@@ -59,7 +59,7 @@ export function Mountain(props) {
 
   return (
     <group {...props} dispose={null}>
-      <group name='MONTFORT'>
+      <group name='MOUNTAIN'>
         <mesh
           name='Mountain'
           renderOrder={1}

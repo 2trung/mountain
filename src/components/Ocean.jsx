@@ -6,6 +6,7 @@ import { useSeaRockMaterial } from '../materials/useSeaRockMaterial'
 import { useTransitionState } from '../state/TransitionContext'
 import { useChapterVisible } from '../state/useChapterVisible'
 import { smoothstep } from '../utils/math'
+import { ConstantColorFactor } from 'three'
 
 // Ocean chapter props (imported via gltfjsx structure) from ocean.glb: the
 // big Sea plane (animated water shader) and the instanced sea rocks, which carry
@@ -14,6 +15,7 @@ import { smoothstep } from '../utils/math'
 // overcast cloud cover instead.)
 export function Ocean(props) {
   const { nodes, materials } = useGLTF('/ocean/ocean.glb')
+  console.log(nodes, materials)
   // The Sea material's baked map is the GLSL `tMap` (the "waves" shoreline mask).
   const water = useWaterMaterial(materials.Sea.map)
   // TSL port of ocean_sea_rock.glsl, replacing the near-black baked material.
@@ -57,10 +59,6 @@ export function Ocean(props) {
         material={materials.DiffuseCloud}
         renderOrder={3}
       />
-      {/* Ocean1/2 are EXT_mesh_gpu_instancing nodes (InstancedMesh): render
-          the node itself so its instanceMatrix places every rock — a plain
-          <mesh geometry=...> would collapse them to a single copy at origin.
-          Override only the material with the TSL sea-rock port. */}
       <primitive
         object={nodes.Ocean1}
         material={seaRock}

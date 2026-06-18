@@ -32,7 +32,7 @@ export function Peaks(props) {
 
   return (
     <group {...props} dispose={null}>
-      <group name='MONTFORT'>
+      <group name='MOUNTAIN'>
         <mesh
           name='SnowPeaks'
           renderOrder={3}
