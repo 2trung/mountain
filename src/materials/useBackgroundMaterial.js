@@ -3,7 +3,6 @@ import { useTexture } from '@react-three/drei'
 import {
   MeshBasicNodeMaterial,
   RepeatWrapping,
-  NearestFilter,
   Color,
   DoubleSide,
 } from 'three/webgpu'
@@ -34,20 +33,14 @@ import {
 } from 'three/tsl'
 
 // Full TSL port of background.glsl (material "Sky") — the dome behind the
-// mountain. Recreated 1:1 from the reference fragment shader: vertical sky
-// gradient, drifting cloud bands, night "data" lines, the fort-energy
-// starfield, the who-we-are / snow sea & globe chapter washes, and the
-// transition cloud wash. GLSL branches (if fortEnergy / if snow) are kept
-// as branchless mask multiplies, which is equivalent and friendlier to the
-// node graph.
+// mountain. Recreated from the reference fragment shader: vertical sky
+// gradient, drifting cloud bands, night "data" lines, the who-we-are / snow
+// sea & globe chapter washes, and the transition cloud wash. GLSL chapter
+// branches (if snow, etc.) are kept as branchless mask multiplies, which is
+// equivalent and friendlier to the node graph.
 //
 // Sampler -> asset mapping:
-//   tNoise        -> noise.webp (all cloud/line/dither/star-placement noise)
-//   tNearestNoise -> noise.webp sampled with NearestFilter (star cells)
-//   tMouse        -> no mouse-trail render target exists in this build, so the
-//                    mouse term resolves to 0 (every place it feeds is additive
-//                    and degrades cleanly: cloud offsets vanish, stars keep
-//                    their .8 base brightness).
+//   tNoise -> noise.webp (all cloud/line/dither noise)
 export function useBackgroundMaterial() {
   const [noiseTex] = useTexture(['/noise.webp'])
 
@@ -56,13 +49,6 @@ export function useBackgroundMaterial() {
 
 export function createBackgroundMaterial({ noiseTex }) {
   noiseTex.wrapS = noiseTex.wrapT = RepeatWrapping
-
-  // tNearestNoise: same image, point-sampled so each star cell reads one flat
-  // value. Cloning gives it an independent sampler/GPU upload.
-  const nearestTex = noiseTex.clone()
-  nearestTex.wrapS = nearestTex.wrapT = RepeatWrapping
-  nearestTex.minFilter = nearestTex.magFilter = NearestFilter
-  nearestTex.needsUpdate = true
 
   const uPage = uniform(0)
   const uTransition = uniform(0)
@@ -75,8 +61,6 @@ export function createBackgroundMaterial({ noiseTex }) {
   const rand = (p) =>
     fract(sin(mod(dot(p, vec2(12.9898, 78.233)), Math.PI)).mul(43758.5453))
 
-  const pow2 = (x) => x.mul(x)
-
   const fragment = Fn(() => {
     const vUv = uv()
     const sUv = screenUV // gl_FragCoord.xy / uResolution
@@ -87,7 +71,6 @@ export function createBackgroundMaterial({ noiseTex }) {
     const whoWeAre = step(-0.5, uPage).oneMinus()
     const snow = step(-0.5, uPage).mul(step(0.5, uPage).oneMinus())
     const night = step(0.5, uPage).mul(step(1.5, uPage).oneMinus())
-    const fortEnergy = step(3.5, uPage).mul(step(4.5, uPage).oneMinus())
 
     // --- base sky value: soft radial darkening * height + a slow cloud lift ---
     const dUv = vec2(vUv.x.add(t.mul(0.01)), vUv.y)
@@ -111,33 +94,6 @@ export function createBackgroundMaterial({ noiseTex }) {
     )
     value = mix(value, ditheredValue, night)
 
-    // --- fort energy: bottom-up glow + soft cloud band ---
-    let energyValue = smoothstep(
-      0.15,
-      0.25,
-      ditheredUv.y
-        .add(rand(fragCoord).sub(0.5).mul(0.002))
-        .add(0.03)
-        .sub(abs(sUv.x.sub(0.5)).mul(0.1)),
-    )
-    energyValue = energyValue.mul(smoothstep(0.26, 0.25, vUv.y))
-    let feUv = vec2(
-      vUv.x.mul(float(1).add(sUv.x.sub(0.5).mul(0.2))),
-      vUv.y.mul(float(2).add(pow2(abs(sUv.x.sub(0.5))).mul(0.8))),
-    )
-    feUv = feUv.mul(
-      float(1).add(
-        texture(noiseTex, vUv.mul(2).add(vec2(0, t.mul(0.007))))
-          .r.sub(0.5)
-          .mul(0.08),
-      ),
-    )
-    let feClouds = texture(noiseTex, feUv.add(0.2)).r
-    feClouds = smoothstep(0.55, 0, feClouds)
-    energyValue = energyValue.add(feClouds)
-    energyValue = min(energyValue, 1)
-    value = mix(value, energyValue, fortEnergy)
-
     // --- sky gradient (snow lifts the horizon a touch brighter) ---
     let color = mix(
       uDarkColor,
@@ -145,7 +101,7 @@ export function createBackgroundMaterial({ noiseTex }) {
       clamp(value, 0, 1),
     )
 
-    // --- night "data" lines (added later, after stars) ---
+    // --- night "data" lines (added later) ---
     let lines = texture(
       noiseTex,
       vUv.mul(vec2(8, 0.1)).add(vec2(0, t.mul(0.01))),
@@ -156,28 +112,6 @@ export function createBackgroundMaterial({ noiseTex }) {
 
     const uvB = vUv.mul(vec2(6, -8))
     const basic2Noise = texture(noiseTex, uvB.mul(2.5).mul(vec2(2, 1))).r
-    // tMouse render target absent in this build -> mouse = 0.
-    const mouse = float(0)
-
-    // --- fort-energy starfield (3 layered point-sampled cells) ---
-    const starLayer = (scale, off, secondInner) => {
-      const cell = vUv.mul(scale)
-      const cellUv = fract(cell)
-      const uniq = texture(nearestTex, floor(cell).div(scale).add(off))
-      const m = length(cellUv.sub(0.5).add(uniq.rg.sub(0.5).mul(0.4)))
-      const s = smoothstep(0.05, 0, m).add(
-        smoothstep(secondInner, 0, m).mul(0.1),
-      )
-      return s.mul(smoothstep(0.7, 1, uniq.b))
-    }
-    let stars = starLayer(150, 0, 0.15)
-    stars = stars.add(starLayer(200, 0.5, 0.1))
-    stars = stars.add(starLayer(230, 0.1, 0.1).mul(0.8))
-    stars = stars.mul(smoothstep(0.25, 0.15, vUv.y))
-    stars = stars.mul(smoothstep(0.2, 0, feClouds))
-    stars = stars.mul(mouse.add(0.8))
-    color = color.add(stars.mul(uLightColor.add(0.4)).mul(fortEnergy))
-    color = mix(color, vec3(0), smoothstep(0.5, 1, uChapter).mul(fortEnergy))
 
     // --- night lines blended in over the sky ---
     // Reference tints these "data lines" with vec3(0.3, 0.7, 0.5), but that
@@ -195,9 +129,9 @@ export function createBackgroundMaterial({ noiseTex }) {
 
     // --- procedural cloud rows (snow sky + transition wash) ---
     const count = float(4)
-    const fUv = uvB.add(vec2(t.mul(0.005), 0)).add(mouse.mul(0.01))
+    const fUv = uvB.add(vec2(t.mul(0.005), 0))
     // Only cUv.y is read downstream, so we track it as a scalar.
-    let cY = uvB.y.mul(count).add(mouse.mul(0.01)).sub(2)
+    let cY = uvB.y.mul(count).sub(2)
     const offset = smoothstep(
       texture(noiseTex, uvB.mul(4)).r.mul(0.2).add(0.7),
       1,
@@ -221,7 +155,6 @@ export function createBackgroundMaterial({ noiseTex }) {
       .add(t.mul(0.01))
       .add(texture(noiseTex, uvB).r.mul(0.2))
       .add(vec2(basic2Noise, basic2Noise).mul(0.05))
-      .add(mouse.mul(0.01))
     const smallCloudsX = smoothstep(
       0.5,
       0.62,

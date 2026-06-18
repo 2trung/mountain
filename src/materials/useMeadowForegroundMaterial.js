@@ -49,9 +49,8 @@ import { hueShift, adjustSaturation, dHdxyFwd, perturbNormalArb } from './tslUti
 //   tGrass       → grass_diffuse.webp (detail grass + bump source)
 //   tNoise       → noise.webp (uv jitter, lake warp, fog noise)
 // Omitted (no asset / not compiled into the reference variant): tReflexion,
-// tNoiseNormal (declared but unused), tMouse (= 0; its normal-scale term
-// collapses to 1). tVoronoi only fed a `moss` color the reference computes but
-// never reads back (dead code), so both are dropped.
+// tNoiseNormal (declared but unused). tVoronoi only fed a `moss` color the
+// reference computes but never reads back (dead code), so both are dropped.
 export function useMeadowForegroundMaterial({ baseMap, lightMap }) {
   const [grassTex, noiseTex] = useTexture([
     '/grass_diffuse.webp',
@@ -156,7 +155,7 @@ export function createMeadowForegroundMaterial({
 
   const diffuseColor = vec4(rgb, a)
 
-  /* --- normal: grass bump (mouse term = 0 → factor 1) --- */
+  /* --- normal: grass bump --- */
   const normal = perturbNormalArb(
     viewPos,
     geoNormal,

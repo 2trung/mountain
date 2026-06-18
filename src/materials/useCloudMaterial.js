@@ -28,8 +28,7 @@ import {
 // an aspect ratio (Y scale / X scale) so every cloud samples the noise
 // textures differently. uv.y is distorted by three scrolling noise layers,
 // then shaped into a band of cloud with smoothsteps and faded at the quad
-// edges. The original's tMouse trail texture is omitted — with mouse = 0 its
-// distortion terms cancel out exactly.
+// edges.
 //
 // Scroll-driven uniforms are exposed on material.userData with neutral
 // defaults (the shader renders the plain cloud state until they're animated):

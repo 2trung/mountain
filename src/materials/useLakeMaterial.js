@@ -47,8 +47,6 @@ import { rotateUv, tangentTransform } from './tslUtils'
 //   tNoiseNormal → noise-solid-normal.webp (the rippling normal detail)
 //   tNoise       → noise.webp (uv warp before the normal lookups)
 //   tDiffuse     → reflector() (live planar reflection of the mountain)
-// tMouse is dropped (mouse = 0, so its ripple-strength terms collapse to the
-// shader's constants: warp = 0.025, normal.xy scale = 1).
 export function useLakeMaterial() {
   const [normalTex, noiseTex] = useTexture([
     '/noise-solid-normal.webp',
@@ -91,8 +89,7 @@ export function createLakeMaterial({ normalTex, noiseTex }) {
         .add(0.6),
     )
 
-    // Warp the uv, then sample two animated normal layers (mouse = 0, so the
-    // ripple strength resolves to the constant .025).
+    // Warp the uv, then sample two animated normal layers (ripple strength .025).
     let dUv = rotateUv(st, vec2(0.5, 0.5), 0.4)
     dUv = dUv.add(
       texture(noiseTex, st.mul(6).add(vec2(-0.5, 0.2).mul(lt))).rg.mul(0.025),

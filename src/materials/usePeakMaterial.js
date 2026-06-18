@@ -39,8 +39,8 @@ import { dHdxyFwd, perturbNormalArb, tangentTransform } from './tslUtils'
 //   tPerlin    → /perlinNoise.webp
 //   tNormalMap → /noise-solid-normal.webp (stand-in: the GLB exports no
 //                normal texture; uNormalScale tunes its strength)
-// Omitted: tMouse (trail FBO; mouse = 0 cancels its windy-snow boost) and
-// tEnvMap (scene lights stand in for the original's IBL, as on the mountain).
+// Omitted: tEnvMap (scene lights stand in for the original's IBL, as on the
+// mountain).
 export function usePeakMaterial(sourceMaterial) {
   const [noiseTex, perlinTex, normalTex] = useTexture([
     '/noise.webp',
@@ -94,7 +94,6 @@ export function createPeakMaterial({ map, noiseTex, perlinTex, normalTex }) {
         .add(vec2(t.mul(-0.07), 0)),
     ).rgb,
   ).mul(
-    // original adds .3 * mouse here (tMouse omitted)
     smoothstep(
       0.5,
       1,

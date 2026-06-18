@@ -54,7 +54,6 @@ import { adjustSaturation, hueShift, tangentTransform } from './tslUtils'
 //
 // Intentional simplifications vs. GLSL:
 //   - uChapter removed (replaced by uVisible gate + uTransition)
-//   - tMouse dropped (mouse = 0 cancels all its terms)
 //   - reflexion tint (mix(vec3(1), vec3(0.2, .95-uChapter, 1), ...)) dropped
 //     (needs uChapter + screen-space sUv)
 //   - Centered foam discs (waveFoamer / foamer) dropped — too large on the
@@ -215,7 +214,7 @@ export function createWaterMaterial({
        vReflectUv = textureMatrix * vec4(position, 1.0), replicated from vertex shader.
        Normal perturbation added before perspective divide (matches texture2DProj). */
     const reflectVec = uTextureMatrix.mul(vec4(positionLocal, 1))
-    // texture2DProj: divide by w after adding perturbation (mouse=0 so only normal)
+    // texture2DProj: divide by w after adding the normal perturbation
     const pertW = reflectVec.w.add(0.8)
     const reflectSampleUv = vec2(
       reflectVec.x.add(normal.x.mul(0.8)),

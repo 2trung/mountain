@@ -63,12 +63,10 @@ import {
 //   tMixMap     → snowRockMix.webp (snow/rock blend mask)
 //   tMap2       → rock_diffuse.webp (detail/second diffuse; meadow and
 //                 ocean swap in grass_diffuse.webp)
-//   tMap        → rock_diffuse.webp (only sampled when uPage > 2.5: ocean &
-//                 fortEnergy — the ocean coast's bare-rock layer)
+//   tMap        → rock_diffuse.webp (only sampled when uPage > 2.5: ocean —
+//                 the ocean coast's bare-rock layer)
 //   tRockNormal → rock_normal.webp
 // Omitted (no asset / no equivalent):
-//   tMouse  — mouse trail FBO; with mouse = 0 every term it feeds cancels,
-//             so the night wireframe grid is dropped too
 //   tEnvMap — PMREM env map; the scene's ambient + directional lights stand
 //             in for the original's IBL-only lighting
 // tArmMap (AO/lightmap) is the original's single swapped-per-chapter sampler;
@@ -207,8 +205,7 @@ export function createMountainMaterial({
   const night = step(0.5, uPage).mul(step(1.5, uPage).oneMinus())
   const meadow = step(1.5, uPage).mul(step(2.5, uPage).oneMinus())
   const ocean = step(2.5, uPage).mul(step(3.5, uPage).oneMinus())
-  const fortEnergy = step(3.5, uPage)
-  const pageHigh = step(2.5, uPage) // ocean + fortEnergy
+  const pageHigh = step(2.5, uPage) // ocean (high-altitude bare-rock layer)
 
   const transition = uTransition
   const transDir = uTransitionDirection
@@ -250,11 +247,7 @@ export function createMountainMaterial({
     0,
     smoothstep(0.01, 0, transition),
   )
-  const fadeTransition = mix(
-    smoothstep(0, 0.2, transition),
-    smoothstep(0.09, 0.1, transition.mul(0.13).add(mountainHeight.mul(0.2))),
-    fortEnergy,
-  )
+  const fadeTransition = smoothstep(0, 0.2, transition)
   const transitionWave = mix(fadeTransition, wave, transDir)
 
   const smallNoise = texture(noiseTex, st.mul(45)).rg.sub(0.5)
@@ -453,7 +446,7 @@ export function createMountainMaterial({
     float(2)
       .add(night.mul(4))
       .mul(mixMapSample.r.mul(snow.add(night)).oneMinus()),
-    0.3, // meadow factor; original adds .4 * mouse (omitted)
+    0.3, // meadow factor
     meadow,
   )
   const nTex = vec3(nTexRaw.xy.mul(nTexScale), nTexRaw.z)
@@ -606,24 +599,11 @@ export function createMountainMaterial({
   const nightFog = smoothstep(15, -20, posL.y).mul(0.2).mul(night)
   outgoing = mix(outgoing, vec3(0, 0.4, 0.9), nightFog.mul(0.2))
 
-  // (Night mouse wireframe grid omitted — needs the tMouse trail FBO)
   const strictNight = max(0, night.sub(transition))
   outgoing = outgoing.mul(strictNight.mul(min(1, uChapter)).oneMinus())
 
-  /* Alpha — fortEnergy backside/edge fades + chapter fade-out */
-  let alpha = mix(
-    float(1),
-    smoothstep(302, 301.5, viewPos.z.negate()),
-    fortEnergy,
-  )
-  alpha = alpha.mul(mix(fortEnergy.oneMinus(), 1, transitionWave))
-  alpha = alpha.mul(
-    smoothstep(0.3, 0.45, length(st.sub(0.5)))
-      .mul(fortEnergy)
-      .mul(smoothstep(0.6, 0.2, uTransition))
-      .oneMinus(),
-  )
-  alpha = alpha.mul(smoothstep(2.5, 2.3, uChapter))
+  /* Alpha — chapter fade-out */
+  const alpha = smoothstep(2.5, 2.3, uChapter)
   outgoing = outgoing.mul(alpha)
 
   const material = new MeshStandardNodeMaterial({ transparent: true })
