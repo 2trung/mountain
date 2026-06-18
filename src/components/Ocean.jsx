@@ -15,7 +15,6 @@ import { ConstantColorFactor } from 'three'
 // overcast cloud cover instead.)
 export function Ocean(props) {
   const { nodes, materials } = useGLTF('/ocean/ocean.glb')
-  console.log(nodes, materials)
   // The Sea material's baked map is the GLSL `tMap` (the "waves" shoreline mask).
   const water = useWaterMaterial(materials.Sea.map)
   // TSL port of ocean_sea_rock.glsl, replacing the near-black baked material.

@@ -135,7 +135,7 @@ export function createSeaRockMaterial({ normalTex, noiseTex }) {
   const fogViewZ = perspectiveDepthToViewZ(depth, uFogNear, uFogFar)
   const fogDepth = smoothstep(
     0.01,
-    0.15,
+    0.4,
     viewZToOrthographicDepth(fogViewZ, uFogNear, uFogFar),
   )
   outgoing = mix(outgoing, uLightColor, fogDepth)
