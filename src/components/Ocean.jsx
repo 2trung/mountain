@@ -3,22 +3,24 @@ import { useGLTF } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useWaterMaterial } from '../materials/useWaterMaterial'
 import { useSeaRockMaterial } from '../materials/useSeaRockMaterial'
+import { useOceanCloudMaterial } from '../materials/useOceanCloudMaterial'
 import { useTransitionState } from '../state/TransitionContext'
 import { useChapterVisible } from '../state/useChapterVisible'
 import { smoothstep } from '../utils/math'
 import { ConstantColorFactor } from 'three'
 
 // Ocean chapter props (imported via gltfjsx structure) from ocean.glb: the
-// big Sea plane (animated water shader) and the instanced sea rocks, which carry
-// their world placement in their instanceMatrix. (The baked DiffuseCloud
-// instances rendered as flat slabs and are dropped; the sky dome supplies the
-// overcast cloud cover instead.)
+// big Sea plane (animated water shader), the instanced DiffuseCloud slabs
+// (Ocean0), and the instanced sea rocks, which all carry their world placement
+// in their instanceMatrix.
 export function Ocean(props) {
   const { nodes, materials } = useGLTF('/ocean/ocean.glb')
   // The Sea material's baked map is the GLSL `tMap` (the "waves" shoreline mask).
   const water = useWaterMaterial(materials.Sea.map)
   // TSL port of ocean_sea_rock.glsl, replacing the near-black baked material.
   const seaRock = useSeaRockMaterial()
+  // TSL port of ocean_cloud.glsl, replacing the baked DiffuseCloud material.
+  const cloud = useOceanCloudMaterial(nodes.Ocean0)
   const progress = useTransitionState()
   const ref = useChapterVisible(3)
   const camera = useThree((s) => s.camera)
@@ -39,6 +41,12 @@ export function Ocean(props) {
     const r = seaRock.userData
     r.uTransition.value = progress.transition
     r.uLightColor.value.copy(progress.mood.fog) // rocks haze into the sky too
+
+    const c = cloud.userData
+    c.uTransition.value = progress.transition
+    // Reference convention: cloud uLightColor <- chapter bgLight (same pairing
+    // the background dome uses), not the dimmer fog haze color.
+    c.uLightColor.value.copy(progress.mood.bgLight)
   })
 
   return (
@@ -50,14 +58,7 @@ export function Ocean(props) {
         // scale={[2.5, 1, 2.5]}
         renderOrder={2}
       />
-      <mesh
-        name='Ocean0'
-        castShadow
-        receiveShadow
-        geometry={nodes.Ocean0.geometry}
-        material={materials.DiffuseCloud}
-        renderOrder={3}
-      />
+      <primitive object={nodes.Ocean0} material={cloud} renderOrder={3} />
       <primitive
         object={nodes.Ocean1}
         material={seaRock}

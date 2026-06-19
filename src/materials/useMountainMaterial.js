@@ -416,9 +416,12 @@ export function createMountainMaterial({
     ),
     0.7,
   )
+  const oceanContrast = smoothstep(0.3, 0.75, armSample0.r)
+  const oceanLight = armSample.rgb.mul(mix(float(0.3), float(5), oceanContrast))
   let armRgb = mix(armSample.rgb, snowLightmap, snow)
   armRgb = mix(armRgb, meadowLightmap, meadow)
   armRgb = mix(armRgb, nightLightmap, night)
+  armRgb = mix(armRgb, oceanLight, ocean)
 
   /* Specular occlusion (reference lines 537-539). The scene is IBL-only, so the
      env map is the sole specular source; without this the ocean coast keeps
