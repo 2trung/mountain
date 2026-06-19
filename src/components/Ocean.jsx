@@ -14,7 +14,9 @@ import { ConstantColorFactor } from 'three'
 // (Ocean0), and the instanced sea rocks, which all carry their world placement
 // in their instanceMatrix.
 export function Ocean(props) {
-  const { nodes, materials } = useGLTF('/ocean/ocean.glb')
+  const { nodes, materials } = useGLTF(
+    `${import.meta.env.BASE_URL}ocean/ocean.glb`,
+  )
   // The Sea material's baked map is the GLSL `tMap` (the "waves" shoreline mask).
   const water = useWaterMaterial(materials.Sea.map)
   // TSL port of ocean_sea_rock.glsl, replacing the near-black baked material.
@@ -77,4 +79,4 @@ export function Ocean(props) {
   )
 }
 
-useGLTF.preload('/ocean/ocean.glb')
+useGLTF.preload(`${import.meta.env.BASE_URL}ocean/ocean.glb`)

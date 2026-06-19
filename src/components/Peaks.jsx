@@ -9,7 +9,9 @@ import { smoothstep } from '../utils/math'
 // snow chapter, so they fade out (via the same uTransition the peak shader uses)
 // both during a switch and whenever the active page leaves it.
 export function Peaks(props) {
-  const { nodes, materials } = useGLTF('/snow/snow.glb')
+  const { nodes, materials } = useGLTF(
+    `${import.meta.env.BASE_URL}snow/snow.glb`,
+  )
   const peaksMaterial = usePeakMaterial(materials.SnowPeaks)
   const progress = useTransitionState()
 
@@ -71,4 +73,4 @@ export function Peaks(props) {
   )
 }
 
-useGLTF.preload('/snow/snow.glb')
+useGLTF.preload(`${import.meta.env.BASE_URL}snow/snow.glb`)

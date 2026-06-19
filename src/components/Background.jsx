@@ -10,7 +10,7 @@ import { useTransitionState } from '../state/TransitionContext'
 // without changing the rendered pattern. Drawn first, depth-test off, so it can
 // never occlude the scene.
 export function Background(props) {
-  const { nodes } = useGLTF('/mountains.glb')
+  const { nodes } = useGLTF(`${import.meta.env.BASE_URL}mountains.glb`)
   const material = useBackgroundMaterial()
   const progress = useTransitionState()
   const camera = useThree((s) => s.camera)
@@ -40,4 +40,4 @@ export function Background(props) {
   )
 }
 
-useGLTF.preload('/mountains.glb')
+useGLTF.preload(`${import.meta.env.BASE_URL}mountains.glb`)

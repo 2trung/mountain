@@ -40,7 +40,7 @@ import {
 // is meaningless off the composed matrix and just squashes the round blob, so
 // it's intentionally dropped. The cloud is a round blob, as in the reference.)
 export function useOceanCloudMaterial(instancedMesh) {
-  const [noiseTex] = useTexture(['/noise.webp'])
+  const [noiseTex] = useTexture([`${import.meta.env.BASE_URL}noise.webp`])
 
   return useMemo(() => {
     noiseTex.wrapS = noiseTex.wrapT = RepeatWrapping

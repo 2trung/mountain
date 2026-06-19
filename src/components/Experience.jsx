@@ -11,10 +11,9 @@ export const Experience = () => {
   return (
     <>
       <CameraRig />
-      <Environment files='/envmap-min.exr' />
+      <Environment files={`${import.meta.env.BASE_URL}envmap-min.exr`} />{' '}
       {/* <Lighting /> */}
       {/* <OrbitControls /> */}
-
       <Background />
       <Mountain />
       <Peaks />

@@ -87,17 +87,17 @@ export function useMountainMaterial() {
     nightLightmapTex,
     oceanLightmapTex,
   ] = useTexture([
-    '/noise.webp',
-    '/perlinNoise.webp',
-    '/voronoi.webp',
-    '/snowRockMix.webp',
-    '/rock_diffuse.webp',
-    '/rock_normal.webp',
-    '/grass_diffuse.webp',
-    '/snow/snow-lightmap.webp',
-    '/meadow/meadow-lightmap.webp',
-    '/night/night-lightmap.webp',
-    '/ocean/ocean-lightmap.webp',
+    `${import.meta.env.BASE_URL}noise.webp`,
+    `${import.meta.env.BASE_URL}perlinNoise.webp`,
+    `${import.meta.env.BASE_URL}voronoi.webp`,
+    `${import.meta.env.BASE_URL}snowRockMix.webp`,
+    `${import.meta.env.BASE_URL}rock_diffuse.webp`,
+    `${import.meta.env.BASE_URL}rock_normal.webp`,
+    `${import.meta.env.BASE_URL}grass_diffuse.webp`,
+    `${import.meta.env.BASE_URL}snow/snow-lightmap.webp`,
+    `${import.meta.env.BASE_URL}meadow/meadow-lightmap.webp`,
+    `${import.meta.env.BASE_URL}night/night-lightmap.webp`,
+    `${import.meta.env.BASE_URL}ocean/ocean-lightmap.webp`,
   ])
 
   return useMemo(

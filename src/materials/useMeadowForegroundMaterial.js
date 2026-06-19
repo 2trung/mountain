@@ -53,8 +53,8 @@ import { hueShift, adjustSaturation, dHdxyFwd, perturbNormalArb } from './tslUti
 // reference computes but never reads back (dead code), so both are dropped.
 export function useMeadowForegroundMaterial({ baseMap, lightMap }) {
   const [grassTex, noiseTex] = useTexture([
-    '/grass_diffuse.webp',
-    '/noise.webp',
+    `${import.meta.env.BASE_URL}grass_diffuse.webp`,
+    `${import.meta.env.BASE_URL}noise.webp`,
   ])
 
   return useMemo(

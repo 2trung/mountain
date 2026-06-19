@@ -7,7 +7,7 @@ import { useTransitionState } from '../state/TransitionContext'
 import { mapsForPage } from '../config/chapters'
 
 export function Mountain(props) {
-  const { nodes } = useGLTF('/mountains.glb')
+  const { nodes } = useGLTF(`${import.meta.env.BASE_URL}mountains.glb`)
   const foregroundMaterial = useCloudMaterial(nodes.Foreground)
   const middlegroundMaterial = useCloudMaterial(nodes.Middleground)
   const mountainMaterial = useMountainMaterial()
@@ -86,4 +86,4 @@ export function Mountain(props) {
   )
 }
 
-useGLTF.preload('/mountains.glb')
+useGLTF.preload(`${import.meta.env.BASE_URL}mountains.glb`)

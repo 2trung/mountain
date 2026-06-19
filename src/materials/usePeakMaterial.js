@@ -43,9 +43,9 @@ import { dHdxyFwd, perturbNormalArb, tangentTransform } from './tslUtils'
 // mountain).
 export function usePeakMaterial(sourceMaterial) {
   const [noiseTex, perlinTex, normalTex] = useTexture([
-    '/noise.webp',
-    '/perlinNoise.webp',
-    '/noise-solid-normal.webp',
+    `${import.meta.env.BASE_URL}noise.webp`,
+    `${import.meta.env.BASE_URL}perlinNoise.webp`,
+    `${import.meta.env.BASE_URL}noise-solid-normal.webp`,
   ])
 
   return useMemo(

@@ -47,7 +47,7 @@ import { perturbNormalArb, dHdxyFwd, tangentTransform } from './tslUtils'
 // Omitted (no asset / no equivalent):
 //   tEnvMap — the scene's <Environment> IBL stands in, exactly like the mountain
 export function useSeaRockMaterial() {
-  const [normalTex, noiseTex] = useTexture(['/rock_normal.webp', '/noise.webp'])
+  const [normalTex, noiseTex] = useTexture([`${import.meta.env.BASE_URL}rock_normal.webp`, `${import.meta.env.BASE_URL}noise.webp`])
 
   return useMemo(
     () => createSeaRockMaterial({ normalTex, noiseTex }),

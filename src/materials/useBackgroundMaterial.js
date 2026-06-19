@@ -53,7 +53,7 @@ import {
 // Sampler -> asset mapping:
 //   tNoise -> noise.webp (all cloud / line / dither noise)
 export function useBackgroundMaterial() {
-  const [noiseTex] = useTexture(['/noise.webp'])
+  const [noiseTex] = useTexture([`${import.meta.env.BASE_URL}noise.webp`])
 
   return useMemo(() => createBackgroundMaterial({ noiseTex }), [noiseTex])
 }

@@ -8,7 +8,9 @@ import { useLakeMaterial } from '../materials/useLakeMaterial'
 import { clamp01, smoothstep } from '../utils/math'
 
 export function Meadow(props) {
-  const { nodes, materials } = useGLTF('/meadow/meadow-min.glb')
+  const { nodes, materials } = useGLTF(
+    `${import.meta.env.BASE_URL}meadow/meadow-min.glb`,
+  )
   const ref = useChapterVisible(2)
   const progress = useTransitionState()
   const camera = useThree((s) => s.camera)
@@ -85,4 +87,4 @@ export function Meadow(props) {
   )
 }
 
-useGLTF.preload('/meadow/meadow-min.glb')
+useGLTF.preload(`${import.meta.env.BASE_URL}meadow/meadow-min.glb`)

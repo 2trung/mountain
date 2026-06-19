@@ -18,7 +18,7 @@ function curveFromGeometry(geometry) {
 }
 
 export function CameraRig() {
-  const { nodes } = useGLTF('/mountains.glb')
+  const { nodes } = useGLTF(`${import.meta.env.BASE_URL}/mountains.glb`)
   const progress = useTransitionState()
   const camera = useThree((s) => s.camera)
 

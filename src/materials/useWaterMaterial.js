@@ -64,9 +64,9 @@ import { adjustSaturation, hueShift, tangentTransform } from './tslUtils'
 // Sea mesh's exact UVs, so it must come from the GLB, not a re-exported file.
 export function useWaterMaterial(foamTex) {
   const [normalTex, noiseTex, lightmapTex] = useTexture([
-    '/water-normal.webp',
-    '/noise.webp',
-    '/ocean/ocean-lightmap.webp',
+    `${import.meta.env.BASE_URL}water-normal.webp`,
+    `${import.meta.env.BASE_URL}noise.webp`,
+    `${import.meta.env.BASE_URL}ocean/ocean-lightmap.webp`,
   ])
 
   return useMemo(

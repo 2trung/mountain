@@ -37,7 +37,7 @@ import {
 //   uTransition — 0..1 page transition; fades clouds except camera-facing ones
 //   uSize       — noise UV scale; also divides the scroll speed
 export function useCloudMaterial(instancedMesh) {
-  const [perlinTex, noiseTex] = useTexture(['/perlinNoise.webp', '/noise.webp'])
+  const [perlinTex, noiseTex] = useTexture([`${import.meta.env.BASE_URL}perlinNoise.webp`, `${import.meta.env.BASE_URL}noise.webp`])
 
   return useMemo(() => {
     perlinTex.wrapS = perlinTex.wrapT = RepeatWrapping

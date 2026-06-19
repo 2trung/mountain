@@ -49,8 +49,8 @@ import { rotateUv, tangentTransform } from './tslUtils'
 //   tDiffuse     → reflector() (live planar reflection of the mountain)
 export function useLakeMaterial() {
   const [normalTex, noiseTex] = useTexture([
-    '/noise-solid-normal.webp',
-    '/noise.webp',
+    `${import.meta.env.BASE_URL}noise-solid-normal.webp`,
+    `${import.meta.env.BASE_URL}noise.webp`,
   ])
 
   return useMemo(
