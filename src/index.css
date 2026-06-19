@@ -6,3 +6,121 @@
 body {
   margin: 0;
 }
+
+/* Chapter navigator (rendered outside the Canvas, over the 3D scene) */
+.chapter-nav {
+  position: fixed;
+  left: 50%;
+  bottom: clamp(20px, 4.5vh, 52px);
+  transform: translateX(-50%);
+  z-index: 10;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  -webkit-user-select: none;
+  user-select: none;
+  animation: chapter-nav-in 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+}
+
+@keyframes chapter-nav-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 16px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.chapter-nav__track {
+  position: relative;
+  display: flex;
+  padding: 6px;
+  border-radius: 999px;
+  background: rgba(18, 22, 28, 0.26);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+/* The sliding highlight. Width is exactly one quarter of the inner track, so a
+   translateX of N*100% (of its own width) lands it on item N. */
+.chapter-nav__indicator {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: calc((100% - 12px) / 4);
+  height: calc(100% - 12px);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.2);
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.chapter-nav__item {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-width: 104px;
+  padding: 13px 24px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.72);
+  white-space: nowrap;
+  transition: color 0.55s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chapter-nav__item:hover {
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.chapter-nav__item.is-active {
+  color: #15191f;
+}
+
+.chapter-nav__item:focus-visible {
+  outline: none;
+}
+
+.chapter-nav__index {
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.1em;
+  opacity: 0.55;
+  transition: opacity 0.55s ease;
+}
+
+.chapter-nav__item.is-active .chapter-nav__index {
+  opacity: 0.85;
+}
+
+.chapter-nav__label {
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 540px) {
+  .chapter-nav__item {
+    min-width: 0;
+    padding: 12px 14px;
+    gap: 6px;
+  }
+  .chapter-nav__index {
+    display: none;
+  }
+  .chapter-nav__label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+  }
+}

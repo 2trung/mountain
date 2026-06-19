@@ -138,11 +138,5 @@ export const IDENTITY_MAPS = {
 export const mapsForPage = (page) =>
   CHAPTERS[Math.round(clamp01(page / 3) * 3)].maps ?? IDENTITY_MAPS
 
-// leva dropdown map: { Snow: 0, Night: 1, ... } → chapter index
-export const CHAPTER_OPTIONS = CHAPTERS.reduce(
-  (acc, c, i) => ({ ...acc, [c.label]: i }),
-  {},
-)
-
 export const moodForPage = (page) =>
   CHAPTERS[Math.round(clamp01(page / 3) * 3)].mood

@@ -1,8 +1,8 @@
 import { createContext, useContext, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { useControls } from 'leva'
 import { Color } from 'three'
-import { CHAPTERS, CHAPTER_OPTIONS, moodForPage } from '../config/chapters'
+import { CHAPTERS, moodForPage } from '../config/chapters'
+import { getChapter } from './chapterStore'
 import { lerp, smoothstep } from '../utils/math'
 
 // Single source of truth for the scene's animated scroll state. It is a plain
@@ -53,22 +53,19 @@ export function TransitionProvider({ children }) {
 const COVER_TIME = 1.0
 const REVEAL_TIME = 1.0
 
-// Drives the chapter switch animation. When the leva State differs from the
-// rendered page it runs a two-phase wave (referencing moutain_fragment.glsl's
+// Drives the chapter switch animation. When the selected chapter differs from
+// the rendered page it runs a two-phase wave (referencing moutain_fragment.glsl's
 // transitionWave): cover ramps uTransition 0→1 so the wave climbs the mountain
 // from top to bottom and hides the mesh, the page is swapped at full cover, then
 // reveal ramps 1→0 to wash the new chapter in. The camera glides along the path
 // across both phases.
 function TransitionDriver({ progress }) {
-  const { State } = useControls({
-    State: { value: 0, options: CHAPTER_OPTIONS },
-  })
-
   const anim = useRef({ phase: 'idle', t: 0, from: 0, to: 0 }).current
   const tmpCol = useRef(new Color()).current
 
   useFrame((_, delta) => {
     const dt = Math.min(delta, 1 / 30) // guard against tab-switch dt spikes
+    const State = getChapter() // active chapter index, driven by the HTML nav
     const target = CHAPTERS[State]
 
     // Ease the live atmosphere toward the active chapter's mood. Done off the

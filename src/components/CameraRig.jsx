@@ -4,10 +4,11 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { CatmullRomCurve3, Vector3 } from 'three'
 import { CHAPTERS } from '../config/chapters'
 import { useTransitionState } from '../state/TransitionContext'
-import { clamp01 } from '../utils/math'
+import { clamp01, lerp } from '../utils/math'
 
-// Builds a smooth curve through the points of one of the GLB's path polylines
-// (CameraPath / TargetPath), so a chapter's camT can sample a continuous point.
+const PARALLAX_AMOUNT = 1
+const PARALLAX_EASE = 0.5
+
 function curveFromGeometry(geometry) {
   const pos = geometry.attributes.position
   const points = []
@@ -30,7 +31,8 @@ export function CameraRig() {
     [nodes],
   )
 
-  // Scratch vectors reused each frame.
+  // Scratch vectors reused each frame. `par` holds the smoothed mouse-parallax
+  // offset (its x/y trail the pointer for the delayed feel).
   const v = useMemo(
     () => ({
       posA: new Vector3(),
@@ -39,12 +41,11 @@ export function CameraRig() {
       tgtB: new Vector3(),
       pos: new Vector3(),
       tgt: new Vector3(),
+      par: new Vector3(),
     }),
     [],
   )
 
-  // Resolve a chapter index to a camera position + look-at target: an explicit
-  // override if the chapter declares one, otherwise a sample of the GLB path.
   const resolve = (index, outPos, outTgt) => {
     const ch = CHAPTERS[index] ?? CHAPTERS[0]
     if (ch.cam) {
@@ -57,13 +58,34 @@ export function CameraRig() {
     }
   }
 
-  useFrame(() => {
-    resolve(progress.camFrom, v.posA, v.tgtA)
-    resolve(progress.camTo, v.posB, v.tgtB)
+  const onPath = (index) => !(CHAPTERS[index] ?? CHAPTERS[0]).cam
+
+  useFrame((state, delta) => {
+    const from = progress.camFrom
+    const to = progress.camTo
     const b = clamp01(progress.camBlend)
-    v.pos.lerpVectors(v.posA, v.posB, b)
-    v.tgt.lerpVectors(v.tgtA, v.tgtB, b)
+
+    if (onPath(from) && onPath(to)) {
+      const tFrom = clamp01((CHAPTERS[from] ?? CHAPTERS[0]).camT)
+      const tTo = clamp01((CHAPTERS[to] ?? CHAPTERS[0]).camT)
+      const t = lerp(tFrom, tTo, b)
+      camCurve.getPointAt(t, v.pos)
+      targetCurve.getPointAt(t, v.tgt)
+    } else {
+      resolve(from, v.posA, v.tgtA)
+      resolve(to, v.posB, v.tgtB)
+      v.pos.lerpVectors(v.posA, v.posB, b)
+      v.tgt.lerpVectors(v.tgtA, v.tgtB, b)
+    }
+
     camera.position.copy(v.pos)
+    camera.lookAt(v.tgt)
+
+    const k = 1 - Math.pow(PARALLAX_EASE, delta)
+    v.par.x = lerp(v.par.x, state.pointer.x * PARALLAX_AMOUNT, k)
+    v.par.y = lerp(v.par.y, state.pointer.y * PARALLAX_AMOUNT, k)
+    camera.translateX(v.par.x)
+    camera.translateY(v.par.y)
     camera.lookAt(v.tgt)
   }, -1)
 
