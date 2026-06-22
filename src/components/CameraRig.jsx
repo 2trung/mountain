@@ -9,6 +9,8 @@ import { clamp01, lerp } from '../utils/math'
 const PARALLAX_AMOUNT = 1
 const PARALLAX_EASE = 0.5
 
+const NIGHT_MEADOW_LIFT = 14
+
 function curveFromGeometry(geometry) {
   const pos = geometry.attributes.position
   const points = []
@@ -71,6 +73,12 @@ export function CameraRig() {
       const t = lerp(tFrom, tTo, b)
       camCurve.getPointAt(t, v.pos)
       targetCurve.getPointAt(t, v.tgt)
+
+      const isNightMeadow =
+        (from === 1 && to === 2) || (from === 2 && to === 1)
+      if (isNightMeadow) {
+        v.pos.y += Math.sin(b * Math.PI) * NIGHT_MEADOW_LIFT
+      }
     } else {
       resolve(from, v.posA, v.tgtA)
       resolve(to, v.posB, v.tgtB)
